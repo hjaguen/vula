@@ -9,11 +9,14 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/vula-os/vula/internal/ai"
+	"github.com/vula-os/vula/internal/apps"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
+	"github.com/vula-os/vula/internal/dotfiles"
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/hud"
 	"github.com/vula-os/vula/internal/installer"
+	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
 )
@@ -212,6 +215,94 @@ var desktopSetupCmd = &cobra.Command{
 	},
 }
 
+var themeCmd = &cobra.Command{
+	Use:   "theme",
+	Short: "Manage and switch global system and terminal themes",
+}
+
+var themeSetCmd = &cobra.Command{
+	Use:   "set [theme-name]",
+	Short: "Apply a global theme (tokyonight, catppuccin, nord, rose-pine)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := theme.NewManager(cfg)
+		themeName := args[0]
+		if err := mgr.ApplyTheme(themeName); err != nil {
+			log.Error("Failed to apply theme", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Theme switched to %s across GNOME and desktop!\n", ui.SuccessStyle.Render("✓"), themeName)
+	},
+}
+
+var themeListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all available global themes",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(ui.RenderHeader("Available Themes", "Unified aesthetic palettes for Vula"))
+		for _, t := range theme.ListThemes() {
+			fmt.Printf("  • %-16s %s (Accent: %s)\n", ui.InfoStyle.Render(t.Name), t.DisplayName, t.AccentColor)
+		}
+		fmt.Println()
+	},
+}
+
+var dotfilesCmd = &cobra.Command{
+	Use:   "dotfiles",
+	Short: "Manage curated developer dotfiles (Fish, Starship, Neovim, Tmux)",
+}
+
+var dotfilesInstallCmd = &cobra.Command{
+	Use:   "install",
+	Short: "Install and link Vula developer dotfiles into ~/.config",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := dotfiles.NewManager(cfg)
+		if err := mgr.InstallAllDotfiles(); err != nil {
+			log.Error("Failed to install dotfiles", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Vula developer dotfiles installed successfully!"))
+		fmt.Println("  • Fish Shell: ~/.config/fish/config.fish")
+		fmt.Println("  • Starship Prompt: ~/.config/starship.toml")
+		fmt.Println("  • Neovim: ~/.config/nvim/init.lua")
+		fmt.Println("  • Tmux: ~/.tmux.conf")
+	},
+}
+
+var appsCmd = &cobra.Command{
+	Use:   "apps",
+	Short: "Manage and install curated developer applications and CLI tooling",
+}
+
+var appsInstallCLICmd = &cobra.Command{
+	Use:   "install-cli",
+	Short: "Install the complete modern developer CLI stack (eza, bat, lazygit, starship, btop, fzf)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := apps.NewManager(cfg)
+		fmt.Println(ui.InfoStyle.Render("⚡ Installing modern developer CLI toolchain..."))
+		if err := mgr.InstallCLIStack(); err != nil {
+			log.Error("CLI installation error", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Developer CLI stack installed successfully!"))
+	},
+}
+
+var appsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List curated applications available in Vula",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(ui.RenderHeader("Developer App Recipes", "Curated developer software catalog"))
+		for _, a := range apps.Catalog {
+			fmt.Printf("  • %-14s [%-8s] %s\n", ui.InfoStyle.Render(a.ID), a.Category, a.Description)
+		}
+		fmt.Println()
+	},
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print Vula version and build info",
@@ -230,12 +321,23 @@ func init() {
 
 	desktopCmd.AddCommand(desktopSetupCmd)
 
+	themeCmd.AddCommand(themeSetCmd)
+	themeCmd.AddCommand(themeListCmd)
+
+	dotfilesCmd.AddCommand(dotfilesInstallCmd)
+
+	appsCmd.AddCommand(appsInstallCLICmd)
+	appsCmd.AddCommand(appsListCmd)
+
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(hudCmd)
 	rootCmd.AddCommand(aiCmd)
 	rootCmd.AddCommand(voiceCmd)
 	rootCmd.AddCommand(desktopCmd)
+	rootCmd.AddCommand(themeCmd)
+	rootCmd.AddCommand(dotfilesCmd)
+	rootCmd.AddCommand(appsCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 
