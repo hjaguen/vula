@@ -36,7 +36,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run Gitleaks
+      - name: Run Gitleaks (push)
+        if: github.event_name == 'push'
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE_REF: ${{ github.sha }}
+
+      - name: Run Gitleaks (non-push)
+        if: github.event_name != 'push'
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
