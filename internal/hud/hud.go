@@ -3,8 +3,12 @@ package hud
 import (
 	"context"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"syscall"
+	"time"
 
 	"github.com/charmbracelet/bubbles/spinner"
 	"github.com/charmbracelet/bubbles/textinput"
@@ -12,8 +16,10 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
+	"github.com/vula-os/vula/internal/doctor"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
+	"gopkg.in/yaml.v3"
 )
 
 type Mode int
@@ -21,7 +27,9 @@ type Mode int
 const (
 	ModeCommands Mode = iota
 	ModeAI
+	ModeDoctor
 	ModeVoice
+	ModeConfig
 )
 
 type ActionItem struct {
@@ -33,26 +41,29 @@ type ActionItem struct {
 }
 
 type Model struct {
-	cfg         *config.Config
-	aiClient    *ai.Client
-	voiceEngine *voice.Engine
-	input       textinput.Model
-	spinner     spinner.Model
-	mode        Mode
-	actions     []ActionItem
-	filtered    []ActionItem
-	selectedIdx int
-	aiResponse  strings.Builder
-	loading     bool
-	recording   bool
-	statusMsg   string
-	width       int
-	height      int
-	quitting    bool
+	cfg          *config.Config
+	aiClient     *ai.Client
+	voiceEngine  *voice.Engine
+	input        textinput.Model
+	spinner      spinner.Model
+	mode         Mode
+	actions      []ActionItem
+	filtered     []ActionItem
+	selectedIdx  int
+	aiResponse   strings.Builder
+	doctorOutput string
+	configOutput string
+	loading      bool
+	recording    bool
+	statusMsg    string
+	width        int
+	height       int
+	quitting     bool
 }
 
 type aiChunkMsg string
 type aiDoneMsg struct{ err error }
+type doctorDoneMsg struct{ output string }
 type voiceDoneMsg struct {
 	text string
 	err  error
@@ -72,12 +83,12 @@ func InitialModel(cfg *config.Config) Model {
 	sp.Style = lipgloss.NewStyle().Foreground(ui.SecondaryColor)
 
 	allActions := []ActionItem{
-		{Title: "Vula Doctor", Description: "Run full system & hardware diagnostics", Category: "System", Command: "doctor"},
-		{Title: "Open Terminal", Description: "Launch modern terminal (Ghostty/Kitty)", Category: "Apps", Command: "terminal"},
-		{Title: "Ask Vula AI", Description: "Ask local LLM with active desktop context", Category: "AI", IsAI: true},
-		{Title: "Voice Dictation", Description: "Transcribe voice directly into active window", Category: "Voice", Command: "voice_dictate"},
-		{Title: "Toggle Tiling Mode", Description: "Enable/disable automatic window tiling", Category: "Desktop", Command: "toggle_tiling"},
-		{Title: "Vula Settings", Description: "Open Vula declarative configuration", Category: "System", Command: "config"},
+		{Title: "Vula Doctor", Description: "Run full system, audio, GPU & AI diagnostics", Category: "System", Command: "doctor"},
+		{Title: "Open Terminal", Description: "Launch modern terminal window (Ghostty/GNOME)", Category: "Apps", Command: "terminal"},
+		{Title: "Ask Vula AI", Description: "Query local LLM with active desktop context", Category: "AI", IsAI: true},
+		{Title: "Voice Dictation", Description: "Transcribe voice directly into focused window", Category: "Voice", Command: "voice_dictate"},
+		{Title: "Synthesize Voice", Description: "Test Piper local neural text-to-speech", Category: "Voice", Command: "voice_speak"},
+		{Title: "Vula Settings", Description: "Inspect declarative YAML configuration", Category: "System", Command: "config"},
 		{Title: "Lock Screen", Description: "Lock the current session safely", Category: "System", Command: "lock"},
 	}
 
@@ -91,8 +102,8 @@ func InitialModel(cfg *config.Config) Model {
 		actions:     allActions,
 		filtered:    allActions,
 		selectedIdx: 0,
-		width:       72,
-		height:      20,
+		width:       76,
+		height:      24,
 	}
 }
 
@@ -113,7 +124,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case tea.KeyMsg:
 		switch msg.String() {
-		case "ctrl+c", "esc":
+		case "ctrl+c":
+			m.quitting = true
+			return m, tea.Quit
+
+		case "esc":
+			if m.mode != ModeCommands {
+				// Return to main commands list
+				m.mode = ModeCommands
+				m.input.SetValue("")
+				m.input.Placeholder = "Search actions, apps, or type '?' for AI..."
+				m.statusMsg = ""
+				return m, nil
+			}
 			m.quitting = true
 			return m, tea.Quit
 
@@ -146,7 +169,26 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			val := strings.TrimSpace(m.input.Value())
 
-			// Check for AI prompt prefix "?"
+			// Voice Mode Enter: Record audio and transcribe
+			if m.mode == ModeVoice {
+				m.loading = true
+				m.recording = true
+				m.statusMsg = "Recording 4 seconds of audio..."
+				return m, func() tea.Msg {
+					tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("vula_rec_%d.wav", time.Now().UnixNano()))
+					ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+					defer cancel()
+
+					if err := m.voiceEngine.RecordAudio(ctx, tempFile, 4); err != nil {
+						return voiceDoneMsg{err: err}
+					}
+					text, err := m.voiceEngine.Transcribe(context.Background(), tempFile)
+					_ = os.Remove(tempFile)
+					return voiceDoneMsg{text: text, err: err}
+				}
+			}
+
+			// AI Mode Enter: Query model
 			if strings.HasPrefix(val, "?") || m.mode == ModeAI {
 				query := strings.TrimPrefix(val, "?")
 				query = strings.TrimSpace(query)
@@ -160,14 +202,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 				return m, func() tea.Msg {
 					ctx := context.Background()
-					_, err := m.aiClient.Ask(ctx, query, func(chunk string) {
-						// Streaming updates
-					})
+					resp, err := m.aiClient.Ask(ctx, query, nil)
+					if err == nil {
+						return aiChunkMsg(resp)
+					}
 					return aiDoneMsg{err: err}
 				}
 			}
 
-			// Run selected action
+			// Run selected action from commands list
 			if m.mode == ModeCommands && len(m.filtered) > 0 {
 				action := m.filtered[m.selectedIdx]
 				if action.IsAI {
@@ -176,12 +219,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.input.Placeholder = "Ask Vula AI anything..."
 					return m, nil
 				}
-				return m, m.executeAction(action)
+				return m.handleActionSelection(action)
 			}
 		}
 
 	case aiChunkMsg:
+		m.loading = false
+		m.aiResponse.Reset()
 		m.aiResponse.WriteString(string(msg))
+		m.statusMsg = "Answer generated"
 
 	case aiDoneMsg:
 		m.loading = false
@@ -190,14 +236,19 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		m.statusMsg = "Done"
 
+	case doctorDoneMsg:
+		m.loading = false
+		m.doctorOutput = msg.output
+		m.statusMsg = "Diagnostics complete"
+
 	case voiceDoneMsg:
 		m.recording = false
 		m.loading = false
 		if msg.err != nil {
 			m.statusMsg = fmt.Sprintf("Voice error: %v", msg.err)
 		} else {
-			m.input.SetValue(msg.text)
-			m.statusMsg = "Transcribed speech!"
+			m.statusMsg = fmt.Sprintf("Transcribed: %s", msg.text)
+			_ = voice.TypeIntoActiveWindow(msg.text)
 		}
 	}
 
@@ -228,17 +279,60 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, tea.Batch(cmds...)
 }
 
-func (m Model) executeAction(action ActionItem) tea.Cmd {
-	return func() tea.Msg {
-		switch action.Command {
-		case "terminal":
-			_ = exec.Command("gnome-terminal").Start()
-		case "lock":
-			_ = exec.Command("loginctl", "lock-session").Run()
-		case "toggle_tiling":
-			_ = exec.Command("vula", "extensions", "toggle-tiling").Run()
+func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
+	switch action.Command {
+	case "doctor":
+		m.mode = ModeDoctor
+		m.loading = true
+		m.statusMsg = "Running system diagnostics..."
+		return *m, func() tea.Msg {
+			report := doctor.RunDiagnostics(m.cfg)
+			return doctorDoneMsg{output: report.Render()}
 		}
-		return tea.Quit()
+
+	case "terminal":
+		// Launch detached terminal so HUD can exit or stay responsive
+		go launchTerminal()
+		m.quitting = true
+		return *m, tea.Quit
+
+	case "voice_dictate":
+		m.mode = ModeVoice
+		m.statusMsg = "Voice dictation mode ready. Press Enter to record."
+		return *m, nil
+
+	case "voice_speak":
+		m.statusMsg = "Speaking test phrase with Piper..."
+		go func() {
+			_ = m.voiceEngine.Speak(context.Background(), "Hola Mauricio, el motor de voz de Vula está activo y funcionando.")
+		}()
+		return *m, nil
+
+	case "config":
+		m.mode = ModeConfig
+		data, _ := yaml.Marshal(m.cfg)
+		m.configOutput = string(data)
+		return *m, nil
+
+	case "lock":
+		_ = exec.Command("loginctl", "lock-session").Run()
+		m.quitting = true
+		return *m, tea.Quit
+	}
+
+	return *m, nil
+}
+
+func launchTerminal() {
+	// Try preferred terminal emulators in order
+	terminals := []string{"gnome-terminal", "ghostty", "kitty", "alacritty", "xterm"}
+	for _, term := range terminals {
+		if path, err := exec.LookPath(term); err == nil {
+			cmd := exec.Command(path)
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+			_ = cmd.Start()
+			return
+		}
 	}
 }
 
@@ -261,22 +355,28 @@ func (m Model) View() string {
 		modeBadge = ui.SuccessBadge.Render(" ACTIONS ")
 	case ModeAI:
 		modeBadge = ui.BadgeStyle.Render(" AI ASSIST ")
+	case ModeDoctor:
+		modeBadge = ui.InfoStyle.Render(" DOCTOR ")
 	case ModeVoice:
 		modeBadge = ui.WarnBadge.Render(" VOICE ")
+	case ModeConfig:
+		modeBadge = ui.BadgeStyle.Render(" CONFIG ")
 	}
 
 	topBar := lipgloss.JoinHorizontal(lipgloss.Center, headerLeft, " ", modeBadge)
 	b.WriteString(topBar)
 	b.WriteString("\n\n")
 
-	// Search Input Box
-	b.WriteString(m.input.View())
-	b.WriteString("\n\n")
+	// Search Input Box (only shown in Commands, AI, or Voice modes)
+	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice {
+		b.WriteString(m.input.View())
+		b.WriteString("\n\n")
+	}
 
 	// Content area depending on mode
 	switch m.mode {
 	case ModeCommands:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 68)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
 		b.WriteString("\n")
 		if len(m.filtered) == 0 {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No matching actions found. Type '?' to ask Vula AI.\n"))
@@ -298,36 +398,57 @@ func (m Model) View() string {
 			}
 		}
 
-	case ModeAI:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 68)))
+	case ModeDoctor:
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
 		b.WriteString("\n")
 		if m.loading {
-			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Consulting local AI with desktop context...")))
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Running full hardware and OS diagnostics...")))
+		} else {
+			b.WriteString(m.doctorOutput)
+		}
+
+	case ModeAI:
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
+		b.WriteString("\n")
+		if m.loading {
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Consulting local Ollama with desktop context...")))
 		}
 		if m.aiResponse.Len() > 0 {
 			content := m.aiResponse.String()
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Padding(0, 1).Render(content))
 			b.WriteString("\n")
 		} else if !m.loading {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type your question and press Enter to query Ollama/Cloud AI.\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type your question and press Enter to query Ollama.\n"))
 		}
 
 	case ModeVoice:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 68)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Voice Subsystem Active\n"))
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Render("  Press Enter to record 5 seconds of audio and transcribe with Whisper.\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Voice Subsystem Active (Whisper + Piper)\n\n"))
+		if m.recording {
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), ui.WarnStyle.Render("Recording microphone audio... Speak now!")))
+		} else if m.statusMsg != "" {
+			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Render("  Press Enter to record another voice sample.\n"))
+		} else {
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Press [Enter] to record 4s of voice and type into active window.\n"))
+		}
+
+	case ModeConfig:
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
+		b.WriteString("\n")
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(m.configOutput))
 	}
 
 	// Footer Hints
 	b.WriteString("\n")
 	footer := lipgloss.NewStyle().
 		Foreground(ui.MutedColor).
-		Render("  [Tab] Switch Mode  •  [Enter] Select  •  [Esc] Close  •  [?] AI Mode")
+		Render("  [Tab] Switch Mode  •  [Enter] Select  •  [Esc] Back/Close  •  [?] AI")
 	b.WriteString(footer)
 
 	// Wrap in HUD Card
-	return ui.CardStyle.Width(74).Render(b.String()) + "\n"
+	return ui.CardStyle.Width(76).Render(b.String()) + "\n"
 }
 
 func RunHUD(cfg *config.Config) error {
