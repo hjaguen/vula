@@ -34,7 +34,7 @@ While projects like **Omakub** (Ubuntu/GNOME) and **Omarchy** (Arch/Hyprland) pa
 1. **Rock-Solid LTS Stability:** Built natively on top of Ubuntu 24.04 LTS (Noble Numbat) and GNOME Shell 46+. Zero kernel panics, full GPU acceleration support, and production-grade stability.
 2. **100% Go & Charm TUI:** No fragile 5,000-line bash scripts. Vula is powered by a compiled, type-safe Go binary utilizing the [Charm](https://charm.sh) ecosystem (`bubbletea`, `lipgloss`, `huh`, `bubbles`).
 3. **Conversational Local AI & Voice:** Integrated directly into the OS with active desktop context awareness (reads focused window state and clipboard safely) powered by Ollama (`qwen2.5-coder`, `llama3.2`), local Whisper.cpp (STT), and Piper (neural TTS).
-4. **Unified Aesthetics (`vula theme`):** Instant system-wide theme switcher across GNOME Shell, terminal emulators (Ghostty/Kitty), Neovim, and Starship prompt.
+4. **Unified Aesthetics & Theme Studio (`vula theme`):** System-wide theme switcher and interactive palette creator (TUI + Local AI) across GNOME Shell, terminal emulators (Ghostty/Kitty), Neovim, and Starship prompt.
 5. **Turnkey Dotfiles & App Catalog:** One-command installation of modern Unix CLI tools (`eza`, `bat`, `lazygit`, `zoxide`, `btop`, `fzf`) and pre-configured dotfiles (Fish, Starship, Neovim Lua IDE, Tmux).
 
 ---
@@ -54,7 +54,7 @@ vula/
 │   ├── hud/               # Floating Bubbletea Launcher & Multi-view HUD
 │   ├── installer/         # Interactive Huh-based Idempotent Installer
 │   ├── packages/          # Idempotent APT, Snap & Binary Toolchain Manager
-│   ├── theme/             # Unified Global Theme Switcher Engine
+│   ├── theme/             # Unified Global Theme Switcher & AI Theme Studio
 │   ├── ui/                # Charm Lipgloss Palettes & Banners
 │   └── voice/             # STT (Whisper), Neural TTS (Piper) & Voice Assistant
 ├── dotfiles/              # Curated Dotfile Templates
@@ -124,8 +124,11 @@ Diagnostic Summary: 12 Passed | 0 Failures
 | **`Super + Space`** | **Vula Floating HUD** | Raycast-style launcher, action palette, and AI assistant |
 | **`Super + Alt + A`** | **Active Voice AI** | Conversational assistant: speak your question, receive spoken answer + desktop notification |
 | **`Super + Alt + V`** | **Voice Dictation** | Transcribe spoken words directly into the active editor or input field |
-| **`Super + Alt + H/J/K/L`** | **Workspace Navigation** | Switch workspaces dynamically using Vim keys |
-| **`Super + Shift + H/J/K/L`** | **Move Window** | Move focused window to adjacent workspace |
+| **`Super + Left / Right / Up / Down`** | **Half-Screen Snap** | Snap window to left, right, top, or bottom screen half |
+| **`Super + Alt + U / I / J / K`** | **Quarter-Screen Snap** | Snap window to Top-Left, Top-Right, Bottom-Left, or Bottom-Right |
+| **`Super + T`** | **Toggle Auto-Tile** | Enable / disable automatic window tiling mode |
+| **`Super + Alt + H / J / K / L`** | **Workspace Navigation** | Switch workspaces dynamically using Vim keys |
+| **`Super + Shift + H / J / K / L`** | **Move Window** | Move focused window to adjacent workspace |
 | **`Super + H`** | **Minimize Window** | Hide/minimize currently focused window |
 | **`Super + D`** | **Toggle Desktop** | Show or hide all open desktop windows |
 | **`Super + Q`** | **Close Window** | Close focused application window |
@@ -179,10 +182,9 @@ vula ai models
 
 ---
 
-## 🎨 Global Theme Engine (`vula theme`)
+## 🎨 Global Theme Engine & Theme Studio (`vula theme`)
 
-Switch system-wide themes with a single command across GNOME Shell, GTK accent colors, terminal emulators (Ghostty), and the HUD:
-
+### 1. Switch Existing Themes
 ```bash
 # List available palettes:
 vula theme list
@@ -192,6 +194,44 @@ vula theme set tokyonight    # Tokyo Night (Default)
 vula theme set catppuccin    # Catppuccin Mocha
 vula theme set nord          # Nord Arctic
 vula theme set rose-pine     # Rosé Pine
+```
+
+### 2. Generate Themes with Local AI
+```bash
+# Generate a complete palette from natural language:
+vula theme generate "cyberpunk neon obsidian with emerald and violet accents"
+```
+
+### 3. Interactive TUI Theme Creator
+```bash
+# Launch the Charm Huh form with live terminal preview:
+vula theme create
+```
+
+### 4. Preview Any Theme
+```bash
+vula theme preview tokyonight
+```
+
+---
+
+## 🪟 Tiling Manager & Extensions (`vula desktop`)
+
+### 1. Configure Tiling Assistant & Gaps
+```bash
+vula desktop tiling
+```
+* Sets 6px window gaps and screen edge padding.
+* Highlights the active window with a 2px border in your active theme's accent color.
+* Configures half-screen and quarter-screen snapping shortcuts.
+
+### 2. Curated GNOME Extensions Suite
+```bash
+# List curated extensions:
+vula desktop extensions list
+
+# Download, install, and enable Blur my Shell & Just Perfection:
+vula desktop extensions install-curated
 ```
 
 ---
@@ -237,7 +277,7 @@ vula apps install-cli
 - [x] **v0.1.0-alpha:** Core Go + Charm CLI, `vula doctor`, Declarative YAML configs, Floating HUD, Local Ollama integration, Whisper STT + Piper TTS pipeline.
 - [x] **v0.2.0-alpha:** Conversational Active Voice AI (`vula listen`), `Super + Alt + A` global shortcut, System notification integration.
 - [x] **v0.3.0-alpha:** Global Theme Engine (`tokyonight`, `catppuccin`, `nord`, `rose-pine`), Dotfiles manager (Fish, Starship, Neovim, Tmux), Developer CLI app catalog.
-- [ ] **v0.4.0:** Automatic Tiling Manager extension installer (Forge / Pop Shell for GNOME 46).
+- [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio & AI Generator.
 - [ ] **v1.0.0:** Production Release, `.deb` packaging, PPA & Sigstore release signing.
 
 ---
