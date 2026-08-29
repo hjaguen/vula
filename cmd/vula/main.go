@@ -227,10 +227,61 @@ var desktopSetupCmd = &cobra.Command{
 			log.Error("Desktop configuration failed", "error", err)
 			os.Exit(1)
 		}
+		_ = mgr.ConfigureTilingKeybindings()
 		fmt.Println(ui.SuccessStyle.Render("✓ GNOME Shell optimizations and global keybindings applied successfully!"))
 		fmt.Println("  • [Super + Space] -> Vula HUD")
 		fmt.Println("  • [Super + Alt + V] -> Voice Dictation")
 		fmt.Println("  • [Super + Alt + A] -> Active Voice AI Assistant")
+		fmt.Println("  • [Super + T] -> Toggle Auto-Tile mode")
+	},
+}
+
+var desktopTilingCmd = &cobra.Command{
+	Use:   "tiling",
+	Short: "Configure GNOME 46 Tiling Assistant (gaps, quarter snaps, active border hint)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := gnome.NewManager(cfg)
+		if err := mgr.ConfigureTilingKeybindings(); err != nil {
+			log.Error("Tiling configuration failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Tiling Assistant configured with custom gaps and active border highlight!"))
+		fmt.Println("  • [Super + Left/Right/Up/Down] -> Half-screen snap")
+		fmt.Println("  • [Super + Alt + U/I/J/K] -> Quarter-screen snap")
+		fmt.Println("  • [Super + T] -> Toggle Auto-Tile mode")
+	},
+}
+
+var desktopExtensionsCmd = &cobra.Command{
+	Use:   "extensions",
+	Short: "Manage and install curated GNOME Shell 46 visual extensions",
+}
+
+var extensionsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List curated GNOME extensions",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(ui.RenderHeader("Curated GNOME Extensions", "Visual & functional enhancements for GNOME 46"))
+		for _, e := range gnome.CuratedExtensions {
+			fmt.Printf("  • %-36s %s\n", ui.InfoStyle.Render(e.Name), e.Description)
+		}
+		fmt.Println()
+	},
+}
+
+var extensionsInstallCuratedCmd = &cobra.Command{
+	Use:   "install-curated",
+	Short: "Download and install curated visual extensions (Blur my Shell, Just Perfection)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := gnome.NewManager(cfg)
+		fmt.Println(ui.InfoStyle.Render("⚡ Installing curated GNOME Shell 46 extensions..."))
+		if err := mgr.InstallCuratedExtensions(); err != nil {
+			log.Error("Extension installation failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Curated GNOME extensions installed and enabled!"))
 	},
 }
 
@@ -397,6 +448,10 @@ func init() {
 	voiceCmd.AddCommand(voiceSpeakCmd)
 
 	desktopCmd.AddCommand(desktopSetupCmd)
+	desktopCmd.AddCommand(desktopTilingCmd)
+	desktopCmd.AddCommand(desktopExtensionsCmd)
+	desktopExtensionsCmd.AddCommand(extensionsListCmd)
+	desktopExtensionsCmd.AddCommand(extensionsInstallCuratedCmd)
 
 	themeCmd.AddCommand(themeSetCmd)
 	themeCmd.AddCommand(themeListCmd)
