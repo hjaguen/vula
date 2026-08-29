@@ -194,6 +194,23 @@ var voiceSpeakCmd = &cobra.Command{
 	},
 }
 
+var listenCmd = &cobra.Command{
+	Use:   "listen",
+	Short: "Start active listening AI assistant (Whisper STT -> Ollama -> Piper TTS)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		assistant := voice.NewAssistant(cfg)
+		fmt.Printf("%s\n", ui.InfoStyle.Render("⚡ Vula AI Escuchando... (Habla ahora)"))
+		q, ans, err := assistant.ListenAndRespond(context.Background(), 4)
+		if err != nil {
+			log.Error("Error en escucha activa de IA", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("\n%s %s\n", ui.SubtitleStyle.Render("Pregunta:"), q)
+		fmt.Printf("%s %s\n\n", ui.SuccessStyle.Render("Respuesta:"), ans)
+	},
+}
+
 var desktopCmd = &cobra.Command{
 	Use:   "desktop",
 	Short: "Configure GNOME Shell desktop environment and shortcuts",
@@ -212,6 +229,7 @@ var desktopSetupCmd = &cobra.Command{
 		fmt.Println(ui.SuccessStyle.Render("✓ GNOME Shell optimizations and global keybindings applied successfully!"))
 		fmt.Println("  • [Super + Space] -> Vula HUD")
 		fmt.Println("  • [Super + Alt + V] -> Voice Dictation")
+		fmt.Println("  • [Super + Alt + A] -> Active Voice AI Assistant")
 	},
 }
 
@@ -332,6 +350,7 @@ func init() {
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(hudCmd)
+	rootCmd.AddCommand(listenCmd)
 	rootCmd.AddCommand(aiCmd)
 	rootCmd.AddCommand(voiceCmd)
 	rootCmd.AddCommand(desktopCmd)

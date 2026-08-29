@@ -95,11 +95,11 @@ func (m *Manager) ConfigureKeybindings() error {
 	home := os.Getenv("HOME")
 	hudBin := filepath.Join(home, ".local", "bin", "vula-hud-launch")
 	voiceBin := filepath.Join(home, ".local", "bin", "vula") + " voice record"
+	listenBin := filepath.Join(home, ".local", "bin", "vula") + " listen"
 
 	// Custom Keybinding 1: Vula Floating HUD
 	bindingPath := "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
 	custom0 := bindingPath + "/custom0/"
-
 	_ = exec.Command("dconf", "write", custom0+"name", "'Vula HUD'").Run()
 	_ = exec.Command("dconf", "write", custom0+"command", fmt.Sprintf("'%s'", hudBin)).Run()
 	_ = exec.Command("dconf", "write", custom0+"binding", "'<Super>space'").Run()
@@ -110,9 +110,15 @@ func (m *Manager) ConfigureKeybindings() error {
 	_ = exec.Command("dconf", "write", custom1+"command", fmt.Sprintf("'%s'", voiceBin)).Run()
 	_ = exec.Command("dconf", "write", custom1+"binding", "'<Super><Alt>v'").Run()
 
+	// Custom Keybinding 3: Active AI Voice Assistant
+	custom2 := bindingPath + "/custom2/"
+	_ = exec.Command("dconf", "write", custom2+"name", "'Vula Voice AI Assistant'").Run()
+	_ = exec.Command("dconf", "write", custom2+"command", fmt.Sprintf("'%s'", listenBin)).Run()
+	_ = exec.Command("dconf", "write", custom2+"binding", "'<Super><Alt>a'").Run()
+
 	// Register custom keybinding list
 	_ = exec.Command("dconf", "write", "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings",
-		"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']").Run()
+		"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/']").Run()
 
 	// Core navigation shortcuts
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "close", "['<Super>q', '<Alt>F4']")

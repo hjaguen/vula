@@ -83,6 +83,7 @@ func InitialModel(cfg *config.Config) Model {
 	sp.Style = lipgloss.NewStyle().Foreground(ui.SecondaryColor)
 
 	allActions := []ActionItem{
+		{Title: "⚡ Voice AI Assistant", Description: "Listen by voice, query local AI & speak answer back", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Vula Doctor", Description: "Run full system, audio, GPU & AI diagnostics", Category: "System", Command: "doctor"},
 		{Title: "Open Terminal", Description: "Launch modern terminal window (Ghostty/GNOME)", Category: "Apps", Command: "terminal"},
 		{Title: "Ask Vula AI", Description: "Query local LLM with active desktop context", Category: "AI", IsAI: true},
@@ -295,6 +296,19 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		go launchTerminal()
 		m.quitting = true
 		return *m, tea.Quit
+
+	case "voice_assistant":
+		m.mode = ModeAI
+		m.loading = true
+		m.statusMsg = "Escuchando tu voz..."
+		return *m, func() tea.Msg {
+			assistant := voice.NewAssistant(m.cfg)
+			q, ans, err := assistant.ListenAndRespond(context.Background(), 4)
+			if err != nil {
+				return aiDoneMsg{err: err}
+			}
+			return aiChunkMsg(fmt.Sprintf("🎙 Tú: %s\n\n⚡ Vula AI: %s", q, ans))
+		}
 
 	case "voice_dictate":
 		m.mode = ModeVoice
