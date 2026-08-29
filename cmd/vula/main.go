@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/log"
@@ -240,7 +241,7 @@ var themeCmd = &cobra.Command{
 
 var themeSetCmd = &cobra.Command{
 	Use:   "set [theme-name]",
-	Short: "Apply a global theme (tokyonight, catppuccin, nord, rose-pine)",
+	Short: "Apply a global theme (built-in or custom)",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, _ := config.LoadConfig()
@@ -256,13 +257,71 @@ var themeSetCmd = &cobra.Command{
 
 var themeListCmd = &cobra.Command{
 	Use:   "list",
-	Short: "List all available global themes",
+	Short: "List all available global themes (built-in and custom)",
 	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := theme.NewManager(cfg)
 		fmt.Println(ui.RenderHeader("Available Themes", "Unified aesthetic palettes for Vula"))
-		for _, t := range theme.ListThemes() {
-			fmt.Printf("  • %-16s %s (Accent: %s)\n", ui.InfoStyle.Render(t.Name), t.DisplayName, t.AccentColor)
+		for _, t := range mgr.ListThemes() {
+			tag := ""
+			if t.IsCustom {
+				tag = " [custom]"
+			}
+			fmt.Printf("  • %-18s %-22s %s (Accent: %s)\n", ui.InfoStyle.Render(t.Name), t.DisplayName+tag, t.Background, t.AccentColor)
 		}
 		fmt.Println()
+	},
+}
+
+var themeCreateCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Interactive TUI theme creator (Charm Huh form with live preview)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		fmt.Println(ui.RenderHeader("Vula Theme Studio", "Create a cohesive system-wide color palette"))
+		palette, err := theme.RunInteractiveCreator(cfg)
+		if err != nil {
+			log.Error("Theme creation cancelled or failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println("\n" + theme.RenderPreview(*palette))
+		fmt.Printf("\n%s Custom theme '%s' saved to ~/.config/vula/themes/%s.yaml and applied!\n\n",
+			ui.SuccessStyle.Render("✓"), palette.DisplayName, palette.Name)
+	},
+}
+
+var themeGenerateCmd = &cobra.Command{
+	Use:   "generate [aesthetic-description]",
+	Short: "Generate an accessible, cohesive palette using local AI",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		prompt := strings.Join(args, " ")
+		fmt.Printf("%s Generating AI theme for '%s'...\n", ui.InfoStyle.Render("⚡"), prompt)
+		palette, err := theme.GenerateAITheme(context.Background(), cfg, prompt)
+		if err != nil {
+			log.Error("AI theme generation failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println("\n" + theme.RenderPreview(*palette))
+		fmt.Printf("\n%s AI Theme '%s' created and applied!\n\n", ui.SuccessStyle.Render("✓"), palette.DisplayName)
+	},
+}
+
+var themePreviewCmd = &cobra.Command{
+	Use:   "preview [theme-name]",
+	Short: "Render terminal preview card for a theme",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := theme.NewManager(cfg)
+		all := mgr.GetAllThemes()
+		t, exists := all[args[0]]
+		if !exists {
+			log.Error("Theme not found", "name", args[0])
+			os.Exit(1)
+		}
+		fmt.Println("\n" + theme.RenderPreview(t) + "\n")
 	},
 }
 
@@ -341,6 +400,9 @@ func init() {
 
 	themeCmd.AddCommand(themeSetCmd)
 	themeCmd.AddCommand(themeListCmd)
+	themeCmd.AddCommand(themeCreateCmd)
+	themeCmd.AddCommand(themeGenerateCmd)
+	themeCmd.AddCommand(themePreviewCmd)
 
 	dotfilesCmd.AddCommand(dotfilesInstallCmd)
 

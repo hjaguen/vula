@@ -4,57 +4,65 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/gnome"
+	"gopkg.in/yaml.v3"
 )
 
 type ThemePalette struct {
-	Name        string
-	DisplayName string
-	AccentColor string
-	GtkTheme    string
-	GnomeAccent string // orange, blue, teal, purple, red, etc.
-	Background  string
-	Foreground  string
+	Name           string `yaml:"name"`
+	DisplayName    string `yaml:"display_name"`
+	AccentColor    string `yaml:"accent_color"`
+	SecondaryColor string `yaml:"secondary_color,omitempty"`
+	GtkTheme       string `yaml:"gtk_theme"`
+	GnomeAccent    string `yaml:"gnome_accent"` // orange, blue, teal, purple, red, green, yellow, slate
+	Background     string `yaml:"background"`
+	Foreground     string `yaml:"foreground"`
+	IsCustom       bool   `yaml:"is_custom,omitempty"`
 }
 
-var AvailableThemes = map[string]ThemePalette{
+var BuiltInThemes = map[string]ThemePalette{
 	"tokyonight": {
-		Name:        "tokyonight",
-		DisplayName: "Tokyo Night",
-		AccentColor: "#7AA2F7",
-		GtkTheme:    "Yaru-dark",
-		GnomeAccent: "purple",
-		Background:  "#1A1B26",
-		Foreground:  "#C0CAF5",
+		Name:           "tokyonight",
+		DisplayName:    "Tokyo Night",
+		AccentColor:    "#7AA2F7",
+		SecondaryColor: "#BB9AF7",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "purple",
+		Background:     "#1A1B26",
+		Foreground:     "#C0CAF5",
 	},
 	"catppuccin": {
-		Name:        "catppuccin",
-		DisplayName: "Catppuccin Mocha",
-		AccentColor: "#CBA6F7",
-		GtkTheme:    "Yaru-dark",
-		GnomeAccent: "purple",
-		Background:  "#1E1E2E",
-		Foreground:  "#CDD6F4",
+		Name:           "catppuccin",
+		DisplayName:    "Catppuccin Mocha",
+		AccentColor:    "#CBA6F7",
+		SecondaryColor: "#89B4FA",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "purple",
+		Background:     "#1E1E2E",
+		Foreground:     "#CDD6F4",
 	},
 	"nord": {
-		Name:        "nord",
-		DisplayName: "Nord Arctic",
-		AccentColor: "#88C0D0",
-		GtkTheme:    "Yaru-dark",
-		GnomeAccent: "blue",
-		Background:  "#2E3440",
-		Foreground:  "#D8DEE9",
+		Name:           "nord",
+		DisplayName:    "Nord Arctic",
+		AccentColor:    "#88C0D0",
+		SecondaryColor: "#81A1C1",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "blue",
+		Background:     "#2E3440",
+		Foreground:     "#D8DEE9",
 	},
 	"rose-pine": {
-		Name:        "rose-pine",
-		DisplayName: "Rosé Pine",
-		AccentColor: "#EBBCBA",
-		GtkTheme:    "Yaru-dark",
-		GnomeAccent: "red",
-		Background:  "#191724",
-		Foreground:  "#E0DEF4",
+		Name:           "rose-pine",
+		DisplayName:    "Rosé Pine",
+		AccentColor:    "#EBBCBA",
+		SecondaryColor: "#31748F",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "red",
+		Background:     "#191724",
+		Foreground:     "#E0DEF4",
 	},
 }
 
@@ -66,11 +74,69 @@ func NewManager(cfg *config.Config) *Manager {
 	return &Manager{cfg: cfg}
 }
 
+// GetThemesDir returns the path to custom user themes (~/.config/vula/themes)
+func GetThemesDir() string {
+	return filepath.Join(os.Getenv("HOME"), ".config", "vula", "themes")
+}
+
+// GetAllThemes returns both built-in and user-created custom themes
+func (m *Manager) GetAllThemes() map[string]ThemePalette {
+	themes := make(map[string]ThemePalette)
+	for k, v := range BuiltInThemes {
+		themes[k] = v
+	}
+
+	// Load custom user themes from disk
+	customDir := GetThemesDir()
+	files, err := os.ReadDir(customDir)
+	if err == nil {
+		for _, f := range files {
+			if !f.IsDir() && (strings.HasSuffix(f.Name(), ".yaml") || strings.HasSuffix(f.Name(), ".yml")) {
+				data, err := os.ReadFile(filepath.Join(customDir, f.Name()))
+				if err == nil {
+					var p ThemePalette
+					if err := yaml.Unmarshal(data, &p); err == nil && p.Name != "" {
+						p.IsCustom = true
+						themes[p.Name] = p
+					}
+				}
+			}
+		}
+	}
+
+	return themes
+}
+
+// SaveCustomTheme writes a custom theme to ~/.config/vula/themes/<name>.yaml
+func (m *Manager) SaveCustomTheme(p ThemePalette) error {
+	dir := GetThemesDir()
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return err
+	}
+
+	p.IsCustom = true
+	if p.GtkTheme == "" {
+		p.GtkTheme = "Yaru-dark"
+	}
+	if p.GnomeAccent == "" {
+		p.GnomeAccent = "purple"
+	}
+
+	data, err := yaml.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	filePath := filepath.Join(dir, p.Name+".yaml")
+	return os.WriteFile(filePath, data, 0644)
+}
+
 // ApplyTheme sets the theme across GNOME Shell, Starship prompt, and terminal
 func (m *Manager) ApplyTheme(themeName string) error {
-	palette, exists := AvailableThemes[themeName]
+	allThemes := m.GetAllThemes()
+	palette, exists := allThemes[themeName]
 	if !exists {
-		return fmt.Errorf("unknown theme '%s'. Available: tokyonight, catppuccin, nord, rose-pine", themeName)
+		return fmt.Errorf("unknown theme '%s'. Run 'vula theme list' to see available themes", themeName)
 	}
 
 	// 1. GNOME Shell & Accent Color
@@ -86,16 +152,18 @@ func (m *Manager) ApplyTheme(themeName string) error {
 	home := os.Getenv("HOME")
 	ghosttyDir := filepath.Join(home, ".config", "ghostty")
 	if err := os.MkdirAll(ghosttyDir, 0755); err == nil {
-		ghosttyCfg := fmt.Sprintf("theme = %s\nfont-family = JetBrains Mono\nfont-size = 12\nbackground-blur-radius = 20\n", themeName)
+		ghosttyCfg := fmt.Sprintf("# Auto-generated by Vula Theme Engine\ntheme = %s\nbackground = %s\nforeground = %s\nfont-family = JetBrains Mono\nfont-size = 12\nbackground-blur-radius = 20\n",
+			palette.Name, palette.Background, palette.Foreground)
 		_ = os.WriteFile(filepath.Join(ghosttyDir, "config"), []byte(ghosttyCfg), 0644)
 	}
 
 	return nil
 }
 
-func ListThemes() []ThemePalette {
-	list := make([]ThemePalette, 0, len(AvailableThemes))
-	for _, t := range AvailableThemes {
+func (m *Manager) ListThemes() []ThemePalette {
+	allThemes := m.GetAllThemes()
+	list := make([]ThemePalette, 0, len(allThemes))
+	for _, t := range allThemes {
 		list = append(list, t)
 	}
 	return list
