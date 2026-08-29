@@ -176,13 +176,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.statusMsg = "Recording 4 seconds of audio..."
 				return m, func() tea.Msg {
 					tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("vula_rec_%d.wav", time.Now().UnixNano()))
-					ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+					ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 					defer cancel()
 
 					if err := m.voiceEngine.RecordAudio(ctx, tempFile, 4); err != nil {
 						return voiceDoneMsg{err: err}
 					}
-					text, err := m.voiceEngine.Transcribe(context.Background(), tempFile)
+					text, err := m.voiceEngine.Transcribe(ctx, tempFile)
 					_ = os.Remove(tempFile)
 					return voiceDoneMsg{text: text, err: err}
 				}

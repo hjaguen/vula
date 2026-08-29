@@ -31,12 +31,17 @@ func (e *Engine) RecordAudio(ctx context.Context, outputFile string, maxDuration
 
 	// 16kHz, 16-bit Mono WAV format optimal for Whisper
 	var cmd *exec.Cmd
-	if _, err := exec.LookPath("arecord"); err == nil {
-		cmd = exec.CommandContext(ctx, "arecord", "-D", "default", "-f", "S16_LE", "-r", "16000", "-c", "1", "-d", fmt.Sprintf("%d", int(maxDuration.Seconds())), outputFile)
-	} else if _, err := exec.LookPath("ffmpeg"); err == nil {
-		cmd = exec.CommandContext(ctx, "ffmpeg", "-y", "-f", "pulse", "-i", "default", "-ar", "16000", "-ac", "1", "-t", fmt.Sprintf("%d", int(maxDuration.Seconds())), outputFile)
+	durationSec := int(maxDuration.Seconds())
+	if durationSec <= 0 {
+		durationSec = 4
+	}
+
+	if _, err := exec.LookPath("ffmpeg"); err == nil {
+		cmd = exec.CommandContext(ctx, "ffmpeg", "-y", "-f", "pulse", "-i", "default", "-ar", "16000", "-ac", "1", "-t", fmt.Sprintf("%d", durationSec), outputFile)
+	} else if _, err := exec.LookPath("arecord"); err == nil {
+		cmd = exec.CommandContext(ctx, "arecord", "-D", "default", "-f", "S16_LE", "-r", "16000", "-c", "1", "-d", fmt.Sprintf("%d", durationSec), outputFile)
 	} else {
-		return fmt.Errorf("no audio recorder (arecord or ffmpeg) found in PATH")
+		return fmt.Errorf("no audio recorder (ffmpeg or arecord) found in PATH")
 	}
 
 	return cmd.Run()

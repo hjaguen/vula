@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
@@ -154,10 +155,10 @@ var voiceRecordCmd = &cobra.Command{
 
 		tempFile := "/tmp/vula_voice_record.wav"
 		fmt.Println(ui.InfoStyle.Render("🎙 Recording audio (speak now)..."))
-		ctx, cancel := context.WithTimeout(context.Background(), 5)
+		ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 		defer cancel()
 
-		if err := engine.RecordAudio(ctx, tempFile, 5); err != nil {
+		if err := engine.RecordAudio(ctx, tempFile, 4); err != nil {
 			log.Error("Recording failed", "error", err)
 			os.Exit(1)
 		}
