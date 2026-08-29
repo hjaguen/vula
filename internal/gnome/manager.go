@@ -85,12 +85,15 @@ func (m *Manager) ApplyDesktopOptimizations() error {
 
 // ConfigureKeybindings sets up keyboard-centric shortcuts
 func (m *Manager) ConfigureKeybindings() error {
+	// 0. Free <Super>space from GNOME's switch-input-source so it triggers Vula HUD
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-input-source", "['<Shift><Super>space', 'XF86Keyboard']")
+
 	// Custom Keybinding 1: Vula Floating HUD
 	bindingPath := "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
 	custom0 := bindingPath + "/custom0/"
 
 	_ = exec.Command("dconf", "write", custom0+"name", "'Vula HUD'").Run()
-	_ = exec.Command("dconf", "write", custom0+"command", "'vula hud'").Run()
+	_ = exec.Command("dconf", "write", custom0+"command", "'vula-hud-launch'").Run()
 	_ = exec.Command("dconf", "write", custom0+"binding", "'<Super>space'").Run()
 
 	// Custom Keybinding 2: Voice Dictation

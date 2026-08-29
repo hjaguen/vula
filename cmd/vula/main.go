@@ -10,6 +10,7 @@ import (
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
+	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/hud"
 	"github.com/vula-os/vula/internal/installer"
 	"github.com/vula-os/vula/internal/ui"
@@ -173,6 +174,43 @@ var voiceRecordCmd = &cobra.Command{
 	},
 }
 
+var voiceSpeakCmd = &cobra.Command{
+	Use:   "speak [text]",
+	Short: "Synthesize text into speech locally using Piper TTS",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		engine := voice.NewEngine(cfg)
+		text := args[0]
+		fmt.Printf("%s Synthesizing speech with Piper...\n", ui.InfoStyle.Render("⚡"))
+		if err := engine.Speak(context.Background(), text); err != nil {
+			log.Error("Speech synthesis failed", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
+var desktopCmd = &cobra.Command{
+	Use:   "desktop",
+	Short: "Configure GNOME Shell desktop environment and shortcuts",
+}
+
+var desktopSetupCmd = &cobra.Command{
+	Use:   "setup",
+	Short: "Apply GNOME Shell optimizations, themes, and developer keybindings",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := gnome.NewManager(cfg)
+		if err := mgr.ApplyDesktopOptimizations(); err != nil {
+			log.Error("Desktop configuration failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ GNOME Shell optimizations and global keybindings applied successfully!"))
+		fmt.Println("  • [Super + Space] -> Vula HUD")
+		fmt.Println("  • [Super + Alt + V] -> Voice Dictation")
+	},
+}
+
 var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print Vula version and build info",
@@ -187,12 +225,16 @@ func init() {
 	aiCmd.AddCommand(aiModelsCmd)
 
 	voiceCmd.AddCommand(voiceRecordCmd)
+	voiceCmd.AddCommand(voiceSpeakCmd)
+
+	desktopCmd.AddCommand(desktopSetupCmd)
 
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(hudCmd)
 	rootCmd.AddCommand(aiCmd)
 	rootCmd.AddCommand(voiceCmd)
+	rootCmd.AddCommand(desktopCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 

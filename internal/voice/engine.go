@@ -48,6 +48,11 @@ func (e *Engine) Transcribe(ctx context.Context, audioFile string) (string, erro
 	if whisperPath, err := exec.LookPath("whisper-cpp"); err == nil {
 		modelPath := filepath.Join(os.Getenv("HOME"), ".local/share/vula/models", "ggml-base.bin")
 		cmd := exec.CommandContext(ctx, whisperPath, "-m", modelPath, "-f", audioFile, "--no-timestamps", "-l", "auto")
+		home := os.Getenv("HOME")
+		cmd.Env = append(os.Environ(),
+			fmt.Sprintf("LD_LIBRARY_PATH=%s/.local/lib:%s", home, os.Getenv("LD_LIBRARY_PATH")),
+			fmt.Sprintf("PATH=%s/.local/bin:%s", home, os.Getenv("PATH")),
+		)
 		out, err := cmd.Output()
 		if err != nil {
 			return "", fmt.Errorf("whisper-cpp failed: %w", err)
@@ -84,6 +89,11 @@ func (e *Engine) Speak(ctx context.Context, text string) error {
 
 	// Piper pipeline: echo text | piper --model voice.onnx --output-raw | aplay -r 22050 -f S16_LE -t raw
 	piperCmd := exec.CommandContext(ctx, piperPath, "--model", voiceModel, "--output-raw")
+	home := os.Getenv("HOME")
+	piperCmd.Env = append(os.Environ(),
+		fmt.Sprintf("LD_LIBRARY_PATH=%s/.local/lib:%s", home, os.Getenv("LD_LIBRARY_PATH")),
+		fmt.Sprintf("PATH=%s/.local/bin:%s", home, os.Getenv("PATH")),
+	)
 	piperCmd.Stdin = strings.NewReader(text)
 
 	aplayCmd := exec.CommandContext(ctx, "aplay", "-r", "22050", "-f", "S16_LE", "-t", "raw", "-")

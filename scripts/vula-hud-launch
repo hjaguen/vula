@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Vula HUD Floating Launcher for GNOME Shell
+# ==============================================================================
+
+# If already open, focus the existing window; otherwise launch a floating window
+if command -v wmctrl &> /dev/null && wmctrl -a "Vula HUD" 2>/dev/null; then
+    exit 0
+fi
+
+if command -v gnome-terminal &> /dev/null; then
+    exec gnome-terminal \
+        --class="vula-hud" \
+        --title="⚡ Vula HUD" \
+        --geometry=78x22 \
+        --hide-menubar \
+        -- "$HOME/.local/bin/vula" hud
+else
+    exec "$HOME/.local/bin/vula" hud
+fi
