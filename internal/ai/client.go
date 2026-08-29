@@ -20,10 +20,16 @@ type Message struct {
 	Content string `json:"content"`
 }
 
+type ChatOptions struct {
+	NumThread int `json:"num_thread,omitempty"`
+	NumCtx    int `json:"num_ctx,omitempty"`
+}
+
 type ChatRequest struct {
-	Model    string    `json:"model"`
-	Messages []Message `json:"messages"`
-	Stream   bool      `json:"stream"`
+	Model    string       `json:"model"`
+	Messages []Message    `json:"messages"`
+	Options  *ChatOptions `json:"options,omitempty"`
+	Stream   bool         `json:"stream"`
 }
 
 type ChatResponseChunk struct {
@@ -93,13 +99,22 @@ func (c *Client) Ask(ctx context.Context, prompt string, streamHandler func(chun
 		}
 	}
 
+	var chatOpts *ChatOptions
+	if c.cfg.AI.NumThreads > 0 || c.cfg.AI.ContextLength > 0 {
+		chatOpts = &ChatOptions{
+			NumThread: c.cfg.AI.NumThreads,
+			NumCtx:    c.cfg.AI.ContextLength,
+		}
+	}
+
 	reqBody := ChatRequest{
-		Model: model,
+		Model:    model,
 		Messages: []Message{
 			{Role: "system", Content: systemContent},
 			{Role: "user", Content: prompt},
 		},
-		Stream: true,
+		Options:  chatOpts,
+		Stream:   true,
 	}
 
 	jsonData, err := json.Marshal(reqBody)
@@ -190,7 +205,12 @@ func (c *Client) SuggestCommand(ctx context.Context, task string) (string, error
 	if err != nil {
 		return "", err
 	}
-	return strings.TrimSpace(resp), nil
+	cleaned := strings.TrimSpace(resp)
+	cleaned = strings.TrimPrefix(cleaned, "```bash")
+	cleaned = strings.TrimPrefix(cleaned, "```sh")
+	cleaned = strings.TrimPrefix(cleaned, "```")
+	cleaned = strings.TrimSuffix(cleaned, "```")
+	return strings.TrimSpace(cleaned), nil
 }
 
 // CaptureActiveContext gets the clipboard and active window title

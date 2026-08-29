@@ -29,7 +29,9 @@ type ThemeConfig struct {
 type AIConfig struct {
 	DefaultProvider string                 `yaml:"default_provider"` // ollama, gemini, openai, anthropic
 	OllamaHost      string                 `yaml:"ollama_host"`      // http://localhost:11434
-	DefaultModel    string                 `yaml:"default_model"`    // llama3.2, qwen2.5-coder, deepseek-r1
+	DefaultModel    string                 `yaml:"default_model"`    // qwen2.5:1.5b, qwen2.5-coder:1.5b, llama3.2
+	NumThreads      int                    `yaml:"num_threads"`      // CPU inference threads (e.g. 4)
+	ContextLength   int                    `yaml:"context_length"`   // Context window tokens (e.g. 4096)
 	ContextEnabled  bool                   `yaml:"context_enabled"`  // captures active window & clipboard
 	Streaming       bool                   `yaml:"streaming"`
 	SystemPrompt    string                 `yaml:"system_prompt"`
@@ -84,7 +86,9 @@ func DefaultConfig() *Config {
 		AI: AIConfig{
 			DefaultProvider: "ollama",
 			OllamaHost:      "http://localhost:11434",
-			DefaultModel:    "qwen2.5-coder:7b",
+			DefaultModel:    "qwen2.5-coder:1.5b",
+			NumThreads:      4,
+			ContextLength:   4096,
 			ContextEnabled:  true,
 			Streaming:       true,
 			SystemPrompt:    "You are Vula, an intelligent, concise and hyper-competent developer OS assistant integrated into Ubuntu. Help with code, terminal commands, and system operations safely.",
