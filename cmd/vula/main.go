@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -532,6 +533,95 @@ var voiceDaemonCmd = &cobra.Command{
 	},
 }
 
+var appsUICmd = &cobra.Command{
+	Use:     "ui",
+	Aliases: []string{"store"},
+	Short:   "Interactive visual TUI developer app store (Charm Huh form)",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := apps.NewManager(cfg)
+		if err := mgr.RunInteractiveAppStore(); err != nil {
+			log.Error("App store failed", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
+var wallpaperCmd = &cobra.Command{
+	Use:   "wallpaper",
+	Short: "Manage and rotate high-definition theme wallpapers",
+}
+
+var wallpaperNextCmd = &cobra.Command{
+	Use:   "next",
+	Short: "Rotate to the next theme wallpaper automatically",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		wm := theme.NewWallpaperManager(cfg)
+		path, err := wm.RotateNextWallpaper()
+		if err != nil {
+			log.Error("Wallpaper rotation failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Switched wallpaper to %s\n", ui.SuccessStyle.Render("✓"), filepath.Base(path))
+	},
+}
+
+var wallpaperSetCmd = &cobra.Command{
+	Use:   "set [path-or-filename]",
+	Short: "Apply a specific wallpaper file to GNOME desktop",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		wm := theme.NewWallpaperManager(cfg)
+		target := args[0]
+
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(wm.GetWallpaperDir(), target)
+		}
+
+		if err := wm.SetWallpaper(target); err != nil {
+			log.Error("Failed to set wallpaper", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Set desktop wallpaper: %s\n", ui.SuccessStyle.Render("✓"), filepath.Base(target))
+	},
+}
+
+var wallpaperListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all downloaded and generated wallpapers in ~/.config/vula/wallpapers",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		wm := theme.NewWallpaperManager(cfg)
+		files, err := wm.ListWallpapers()
+		if err != nil {
+			log.Error("Failed listing wallpapers", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.RenderHeader("Wallpaper Collection", fmt.Sprintf("Found %d wallpapers in ~/.config/vula/wallpapers", len(files))))
+		for _, f := range files {
+			fmt.Printf("  • %-28s (%s)\n", ui.InfoStyle.Render(filepath.Base(f)), f)
+		}
+		fmt.Println()
+	},
+}
+
+var wallpaperFetchCmd = &cobra.Command{
+	Use:   "fetch",
+	Short: "Download curated 4K aesthetic wallpapers matching Vula theme palettes",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		wm := theme.NewWallpaperManager(cfg)
+		fmt.Printf("%s Downloading curated theme wallpapers...\n", ui.InfoStyle.Render("⚡"))
+		if err := wm.FetchPresetWallpapers(); err != nil {
+			log.Error("Wallpaper fetch failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Curated HD wallpapers downloaded to ~/.config/vula/wallpapers!"))
+	},
+}
+
 func init() {
 	aiCmd.AddCommand(aiAskCmd)
 	aiCmd.AddCommand(aiCmdSuggest)
@@ -556,10 +646,16 @@ func init() {
 	themeCmd.AddCommand(themeGenerateCmd)
 	themeCmd.AddCommand(themePreviewCmd)
 
+	wallpaperCmd.AddCommand(wallpaperNextCmd)
+	wallpaperCmd.AddCommand(wallpaperSetCmd)
+	wallpaperCmd.AddCommand(wallpaperListCmd)
+	wallpaperCmd.AddCommand(wallpaperFetchCmd)
+
 	dotfilesCmd.AddCommand(dotfilesInstallCmd)
 
 	appsCmd.AddCommand(appsInstallCLICmd)
 	appsCmd.AddCommand(appsListCmd)
+	appsCmd.AddCommand(appsUICmd)
 
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(fetchCmd)
@@ -570,6 +666,7 @@ func init() {
 	rootCmd.AddCommand(voiceCmd)
 	rootCmd.AddCommand(desktopCmd)
 	rootCmd.AddCommand(themeCmd)
+	rootCmd.AddCommand(wallpaperCmd)
 	rootCmd.AddCommand(dotfilesCmd)
 	rootCmd.AddCommand(appsCmd)
 	rootCmd.AddCommand(versionCmd)

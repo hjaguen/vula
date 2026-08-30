@@ -255,6 +255,26 @@ vula theme preview tokyonight
 
 ---
 
+## 🖼 HD Wallpaper Engine & Rotator (`vula wallpaper`)
+
+Manage, download, and dynamically rotate high-definition aesthetic wallpapers tailored to your active Vula theme palette:
+
+```bash
+# Rotate to the next wallpaper in collection:
+vula wallpaper next
+
+# Set a specific wallpaper file:
+vula wallpaper set catppuccin.svg
+
+# List all local wallpapers in ~/.config/vula/wallpapers/:
+vula wallpaper list
+
+# Download curated 4K theme wallpapers:
+vula wallpaper fetch
+```
+
+---
+
 ## 🪟 Tiling Manager & Extensions (`vula desktop`)
 
 ### 1. Configure Tiling Assistant & Gaps
@@ -291,8 +311,17 @@ vula dotfiles install
 
 ---
 
-## 📦 Curated App Catalog (`vula apps`)
+## 📦 Developer App Store & Catalog (`vula apps`)
 
+### 1. Interactive TUI App Store (`vula apps ui`)
+Launch a visual Charm `huh` multi-select store that pre-detects installed tools and lets you pick software recipes to install or update:
+```bash
+vula apps ui
+# Or alias:
+vula apps store
+```
+
+### 2. Install CLI Stack & List Catalog
 ```bash
 # List curated developer software:
 vula apps list
