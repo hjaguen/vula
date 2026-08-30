@@ -17,6 +17,7 @@ import (
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
+	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
 	"gopkg.in/yaml.v3"
@@ -30,6 +31,7 @@ const (
 	ModeDoctor
 	ModeVoice
 	ModeConfig
+	ModeTheme
 )
 
 type ActionItem struct {
@@ -44,6 +46,9 @@ type Model struct {
 	cfg          *config.Config
 	aiClient     *ai.Client
 	voiceEngine  *voice.Engine
+	themeMgr     *theme.Manager
+	themesList   []theme.ThemePalette
+	themeIdx     int
 	input        textinput.Model
 	spinner      spinner.Model
 	mode         Mode
@@ -82,9 +87,13 @@ func InitialModel(cfg *config.Config) Model {
 	sp.Spinner = spinner.Dot
 	sp.Style = lipgloss.NewStyle().Foreground(ui.SecondaryColor)
 
+	themeMgr := theme.NewManager(cfg)
+	themesList := themeMgr.ListThemes()
+
 	allActions := []ActionItem{
 		{Title: "⚡ Voice AI Assistant", Description: "Listen by voice, query local AI & speak answer back", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Vula Doctor", Description: "Run full system, audio, GPU & AI diagnostics", Category: "System", Command: "doctor"},
+		{Title: "Switch System Theme", Description: "Change global system palette across GNOME & terminal", Category: "Theme", Command: "theme"},
 		{Title: "Open Terminal", Description: "Launch modern terminal window (Ghostty/GNOME)", Category: "Apps", Command: "terminal"},
 		{Title: "Ask Vula AI", Description: "Query local LLM with active desktop context", Category: "AI", IsAI: true},
 		{Title: "Voice Dictation", Description: "Transcribe voice directly into focused window", Category: "Voice", Command: "voice_dictate"},
@@ -93,10 +102,21 @@ func InitialModel(cfg *config.Config) Model {
 		{Title: "Lock Screen", Description: "Lock the current session safely", Category: "System", Command: "lock"},
 	}
 
+	currentThemeIdx := 0
+	for i, t := range themesList {
+		if t.Name == cfg.Theme.Palette {
+			currentThemeIdx = i
+			break
+		}
+	}
+
 	return Model{
 		cfg:         cfg,
 		aiClient:    ai.NewClient(cfg),
 		voiceEngine: voice.NewEngine(cfg),
+		themeMgr:    themeMgr,
+		themesList:  themesList,
+		themeIdx:    currentThemeIdx,
 		input:       ti,
 		spinner:     sp,
 		mode:        ModeCommands,
@@ -142,13 +162,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 
 		case "tab":
-			// Cycle modes: Commands -> AI -> Voice
+			// Cycle modes: Commands -> AI -> Voice -> Theme -> Commands
 			if m.mode == ModeCommands {
 				m.mode = ModeAI
 				m.input.Placeholder = "Ask Vula AI anything (uses active desktop context)..."
 			} else if m.mode == ModeAI {
 				m.mode = ModeVoice
 				m.input.Placeholder = "Voice mode: Press Enter to dictate..."
+			} else if m.mode == ModeVoice {
+				m.mode = ModeTheme
+				m.input.Placeholder = "Theme mode: Select theme and press Enter..."
 			} else {
 				m.mode = ModeCommands
 				m.input.Placeholder = "Search actions, apps, or type '?' for AI..."
@@ -158,17 +181,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "up", "ctrl+p":
 			if m.mode == ModeCommands && m.selectedIdx > 0 {
 				m.selectedIdx--
+			} else if m.mode == ModeTheme && m.themeIdx > 0 {
+				m.themeIdx--
 			}
 			return m, nil
 
 		case "down", "ctrl+n":
 			if m.mode == ModeCommands && m.selectedIdx < len(m.filtered)-1 {
 				m.selectedIdx++
+			} else if m.mode == ModeTheme && m.themeIdx < len(m.themesList)-1 {
+				m.themeIdx++
 			}
 			return m, nil
 
 		case "enter":
 			val := strings.TrimSpace(m.input.Value())
+
+			// Theme Mode Enter: Apply selected theme
+			if m.mode == ModeTheme && len(m.themesList) > 0 {
+				selectedTheme := m.themesList[m.themeIdx]
+				if err := m.themeMgr.ApplyTheme(selectedTheme.Name); err != nil {
+					m.statusMsg = fmt.Sprintf("Theme error: %v", err)
+				} else {
+					m.statusMsg = fmt.Sprintf("Theme switched to '%s' across GNOME & terminal!", selectedTheme.DisplayName)
+				}
+				return m, nil
+			}
 
 			// Voice Mode Enter: Record audio and transcribe
 			if m.mode == ModeVoice {
@@ -291,6 +329,18 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 			return doctorDoneMsg{output: report.Render()}
 		}
 
+	case "theme":
+		m.mode = ModeTheme
+		m.themesList = m.themeMgr.ListThemes()
+		for i, t := range m.themesList {
+			if t.Name == m.cfg.Theme.Palette {
+				m.themeIdx = i
+				break
+			}
+		}
+		m.statusMsg = "Select a theme and press Enter to apply."
+		return *m, nil
+
 	case "terminal":
 		// Launch detached terminal so HUD can exit or stay responsive
 		go launchTerminal()
@@ -375,14 +425,16 @@ func (m Model) View() string {
 		modeBadge = ui.WarnBadge.Render(" VOICE ")
 	case ModeConfig:
 		modeBadge = ui.BadgeStyle.Render(" CONFIG ")
+	case ModeTheme:
+		modeBadge = ui.SuccessBadge.Render(" THEME ")
 	}
 
 	topBar := lipgloss.JoinHorizontal(lipgloss.Center, headerLeft, " ", modeBadge)
 	b.WriteString(topBar)
 	b.WriteString("\n\n")
 
-	// Search Input Box (only shown in Commands, AI, or Voice modes)
-	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice {
+	// Search Input Box (only shown in Commands, AI, Voice, or Theme modes)
+	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice || m.mode == ModeTheme {
 		b.WriteString(m.input.View())
 		b.WriteString("\n\n")
 	}
@@ -446,6 +498,34 @@ func (m Model) View() string {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Render("  Press Enter to record another voice sample.\n"))
 		} else {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Press [Enter] to record 4s of voice and type into active window.\n"))
+		}
+
+	case ModeTheme:
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 70)))
+		b.WriteString("\n")
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 System Theme Selector (GNOME & Terminal)\n\n"))
+		if m.statusMsg != "" {
+			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
+		}
+		for i, t := range m.themesList {
+			cursor := "  "
+			titleStyle := lipgloss.NewStyle().Foreground(ui.TextLightColor)
+			accentBlock := lipgloss.NewStyle().Foreground(lipgloss.Color(t.AccentColor)).Bold(true).Render("■■")
+			bgHex := lipgloss.NewStyle().Foreground(ui.MutedColor).Render(fmt.Sprintf("[%s]", t.Background))
+
+			activeTag := ""
+			if t.Name == m.cfg.Theme.Palette {
+				activeTag = "  " + ui.SuccessBadge.Render(" ACTIVE ")
+			}
+
+			if i == m.themeIdx {
+				cursor = lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true).Render("▶ ")
+				titleStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
+			}
+
+			line := fmt.Sprintf("%s%s %-18s %s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), bgHex, activeTag)
+			b.WriteString(line)
+			b.WriteString("\n")
 		}
 
 	case ModeConfig:

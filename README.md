@@ -184,7 +184,13 @@ vula ai models
 
 ## 🎨 Global Theme Engine & Theme Studio (`vula theme`)
 
-### 1. Switch Existing Themes
+### 1. Interactive Theme Selector in Vula HUD (`Super + Space`)
+Switch system-wide themes visually directly from the floating HUD launcher:
+* Press **`Super + Space`** and select **`Switch System Theme`** (or press **`Tab`** to cycle to the **`THEME`** mode).
+* Scroll through available themes with **`Up/Down`** arrow keys to see live accent color blocks, background hex values, and active theme indicators.
+* Press **`Enter`** to instantly apply your chosen theme across GNOME Shell, GTK accent colors, and terminal emulators.
+
+### 2. Switch Existing Themes via CLI
 ```bash
 # List available palettes:
 vula theme list
@@ -196,19 +202,19 @@ vula theme set nord          # Nord Arctic
 vula theme set rose-pine     # Rosé Pine
 ```
 
-### 2. Generate Themes with Local AI
+### 3. Generate Themes with Local AI
 ```bash
 # Generate a complete palette from natural language:
 vula theme generate "cyberpunk neon obsidian with emerald and violet accents"
 ```
 
-### 3. Interactive TUI Theme Creator
+### 4. Interactive TUI Theme Creator
 ```bash
 # Launch the Charm Huh form with live terminal preview:
 vula theme create
 ```
 
-### 4. Preview Any Theme
+### 5. Preview Any Theme
 ```bash
 vula theme preview tokyonight
 ```
@@ -277,7 +283,7 @@ vula apps install-cli
 - [x] **v0.1.0-alpha:** Core Go + Charm CLI, `vula doctor`, Declarative YAML configs, Floating HUD, Local Ollama integration, Whisper STT + Piper TTS pipeline.
 - [x] **v0.2.0-alpha:** Conversational Active Voice AI (`vula listen`), `Super + Alt + A` global shortcut, System notification integration.
 - [x] **v0.3.0-alpha:** Global Theme Engine (`tokyonight`, `catppuccin`, `nord`, `rose-pine`), Dotfiles manager (Fish, Starship, Neovim, Tmux), Developer CLI app catalog.
-- [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio & AI Generator.
+- [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio, AI Palette Generator & HUD Theme Selector.
 - [ ] **v1.0.0:** Production Release, `.deb` packaging, PPA & Sigstore release signing.
 
 ---
