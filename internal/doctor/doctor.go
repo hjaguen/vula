@@ -91,22 +91,37 @@ func checkOS(r *Report) {
 	}
 
 	content := string(data)
-	if strings.Contains(content, "Ubuntu") {
-		is2404 := strings.Contains(content, "24.04")
-		if is2404 {
+	if strings.Contains(content, "Ubuntu") || strings.Contains(content, "ubuntu") || strings.Contains(content, "debian") {
+		// Extract VERSION_ID if available
+		var versionId, prettyName string
+		for _, line := range strings.Split(content, "\n") {
+			if strings.HasPrefix(line, "VERSION_ID=") {
+				versionId = strings.Trim(strings.TrimPrefix(line, "VERSION_ID="), "\"")
+			}
+			if strings.HasPrefix(line, "PRETTY_NAME=") {
+				prettyName = strings.Trim(strings.TrimPrefix(line, "PRETTY_NAME="), "\"")
+			}
+		}
+
+		if prettyName == "" {
+			prettyName = "Ubuntu Linux"
+		}
+
+		// Support Ubuntu 24.04 LTS, 24.10, 26.04 LTS and beyond (>= 24.04)
+		if versionId >= "24.04" || versionId == "" {
 			r.Results = append(r.Results, CheckResult{
 				Category: "Operating System",
 				Name:     "Ubuntu Version",
 				Status:   StatusOK,
-				Message:  "Ubuntu 24.04 LTS (Noble Numbat) detected",
+				Message:  fmt.Sprintf("%s detected (Ubuntu 24.04+ LTS compatible)", prettyName),
 			})
 		} else {
 			r.Results = append(r.Results, CheckResult{
 				Category: "Operating System",
 				Name:     "Ubuntu Version",
 				Status:   StatusWarn,
-				Message:  "Non-24.04 Ubuntu release detected",
-				Hint:     "Vula is optimized for Ubuntu 24.04 LTS",
+				Message:  fmt.Sprintf("Older release detected (%s)", prettyName),
+				Hint:     "Vula requires Ubuntu >= 24.04 LTS for PipeWire and GNOME 46+ compatibility",
 			})
 		}
 	} else {
@@ -114,8 +129,8 @@ func checkOS(r *Report) {
 			Category: "Operating System",
 			Name:     "Distribution",
 			Status:   StatusWarn,
-			Message:  "Non-Ubuntu system detected",
-			Hint:     "Some packages and GNOME integrations may need custom configuration",
+			Message:  "Non-Ubuntu Linux system detected",
+			Hint:     "Vula is built for Ubuntu 24.04+ LTS; some packages may require custom config",
 		})
 	}
 
