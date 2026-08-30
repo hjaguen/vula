@@ -451,13 +451,98 @@ var fetchCmd = &cobra.Command{
 	},
 }
 
+var aiCommitCmd = &cobra.Command{
+	Use:     "commit",
+	Aliases: []string{"git-commit"},
+	Short:   "Generate conventional git commit message from git diff",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		fmt.Printf("\n%s\n\n", ui.InfoStyle.Render("⚡ Analyzing git diff with local AI..."))
+		msg, err := ai.GenerateCommitMessage(context.Background(), cfg)
+		if err != nil {
+			log.Error("Failed generating commit message", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s\n  %s\n\n", ui.SubtitleStyle.Render("Suggested commit message:"), ui.SuccessStyle.Render(msg))
+
+		fmt.Print("Commit with this message? [Y/n]: ")
+		var input string
+		fmt.Scanln(&input)
+		input = strings.ToLower(strings.TrimSpace(input))
+		if input == "" || input == "y" || input == "yes" {
+			if err := ai.ExecuteGitCommit(msg); err != nil {
+				log.Error("Git commit failed", "error", err)
+				os.Exit(1)
+			}
+			fmt.Println(ui.SuccessStyle.Render("✓ Git commit created successfully!"))
+		} else {
+			fmt.Println(ui.WarnStyle.Render("Commit cancelled."))
+		}
+	},
+}
+
+var aiFixCmd = &cobra.Command{
+	Use:   "fix [error text]",
+	Short: "Diagnose terminal error and suggest immediate corrective command",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		inputText := ""
+		if len(args) > 0 {
+			inputText = strings.Join(args, " ")
+		}
+		fmt.Printf("\n%s\n\n", ui.InfoStyle.Render("⚡ Diagnosing terminal error..."))
+		diag, err := ai.DiagnoseTerminalError(context.Background(), cfg, inputText)
+		if err != nil {
+			log.Error("Diagnosis failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.RenderHeader("Terminal Error Diagnosis", "AI Root Cause & Fix Recommendation"))
+		fmt.Println(diag)
+		fmt.Println()
+	},
+}
+
+var aiExplainCmd = &cobra.Command{
+	Use:   "explain",
+	Short: "Explain or refactor selected text/code from active clipboard",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		fmt.Printf("\n%s\n\n", ui.InfoStyle.Render("⚡ Explaining selection..."))
+		exp, err := ai.ExplainSelection(context.Background(), cfg)
+		if err != nil {
+			log.Error("Explanation failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.RenderHeader("AI Code & Context Explanation", "Active Clipboard Analysis"))
+		fmt.Println(exp)
+		fmt.Println()
+	},
+}
+
+var voiceDaemonCmd = &cobra.Command{
+	Use:   "daemon",
+	Short: "Launch continuous hands-free voice assistant background daemon",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		fmt.Println(ui.InfoStyle.Render("⚡ Starting Vula Hands-Free Voice Daemon..."))
+		if err := voice.StartVoiceDaemon(context.Background(), cfg); err != nil {
+			log.Error("Voice daemon failed", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() {
 	aiCmd.AddCommand(aiAskCmd)
 	aiCmd.AddCommand(aiCmdSuggest)
 	aiCmd.AddCommand(aiModelsCmd)
+	aiCmd.AddCommand(aiCommitCmd)
+	aiCmd.AddCommand(aiFixCmd)
+	aiCmd.AddCommand(aiExplainCmd)
 
 	voiceCmd.AddCommand(voiceRecordCmd)
 	voiceCmd.AddCommand(voiceSpeakCmd)
+	voiceCmd.AddCommand(voiceDaemonCmd)
 
 	desktopCmd.AddCommand(desktopSetupCmd)
 	desktopCmd.AddCommand(desktopTilingCmd)

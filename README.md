@@ -130,6 +130,7 @@ vula fetch
 | **`Super + Space`** | **Vula Floating HUD** | Raycast-style launcher, action palette, and AI assistant |
 | **`Super + Alt + A`** | **Active Voice AI** | Conversational assistant: speak your question, receive spoken answer + desktop notification |
 | **`Super + Alt + V`** | **Voice Dictation** | Transcribe spoken words directly into the active editor or input field |
+| **`Super + Alt + C`** | **AI Selection Explain** | Analyze & refactor active selection/clipboard with local AI & desktop notification |
 | **`Super + Left / Right / Up / Down`** | **Half-Screen Snap** | Snap window to left, right, top, or bottom screen half |
 | **`Super + Alt + U / I / J / K`** | **Quarter-Screen Snap** | Snap window to Top-Left, Top-Right, Bottom-Left, or Bottom-Right |
 | **`Super + T`** | **Toggle Auto-Tile** | Enable / disable automatic window tiling mode |
@@ -154,13 +155,19 @@ vula listen
 * **Contextual AI:** Queries the local LLM with active window and clipboard context.
 * **Dual Output:** Speaks the answer back through your speakers with **Piper TTS** in <0.8s and displays a desktop notification.
 
-### 2. Direct Voice Dictation into Any App
+### 2. Hands-Free Voice Listener Daemon
+Run a continuous background voice listener:
+```bash
+vula voice daemon
+```
+
+### 3. Direct Voice Dictation into Any App
 Press **`Super + Alt + V`** or run:
 ```bash
 vula voice record
 ```
 
-### 3. Neural Speech Synthesis
+### 4. Neural Speech Synthesis
 ```bash
 vula voice speak "Hola Mauricio, el motor de voz de Vula está listo y operativo."
 ```
@@ -169,9 +176,30 @@ vula voice speak "Hola Mauricio, el motor de voz de Vula está listo y operativo
 
 ## 🤖 Local AI & Shell Commands
 
-### Ask AI with Desktop Context
+### 1. Smart Git Commit Generator (`vula ai commit`)
+Analyze `git diff` and generate conventional commit messages:
 ```bash
-# Query the local LLM with active window & clipboard context:
+vula ai commit
+# Or alias:
+vula git commit
+```
+
+### 2. Terminal Error Diagnoser (`vula ai fix`)
+Diagnose recent command failures and receive exact fix commands:
+```bash
+vula ai fix "command not found: zoxide"
+# Or pipe error output:
+make 2>&1 | vula ai fix
+```
+
+### 3. Selection & Clipboard AI Explain (`Super + Alt + C`)
+Press **`Super + Alt + C`** or run:
+```bash
+vula ai explain
+```
+
+### 4. Ask AI with Desktop Context
+```bash
 vula ai ask "How do I optimize this SQL query in my clipboard?"
 ```
 

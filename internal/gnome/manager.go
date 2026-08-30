@@ -123,9 +123,16 @@ func (m *Manager) ConfigureKeybindings() error {
 	_ = exec.Command("dconf", "write", custom2+"command", fmt.Sprintf("'%s'", listenBin)).Run()
 	_ = exec.Command("dconf", "write", custom2+"binding", "'<Super><Alt>a'").Run()
 
+	// Custom Keybinding 4: AI Selection/Clipboard Explain
+	explainBin := filepath.Join(home, ".local", "bin", "vula") + " ai explain"
+	custom3 := bindingPath + "/custom3/"
+	_ = exec.Command("dconf", "write", custom3+"name", "'Vula AI Explain Selection'").Run()
+	_ = exec.Command("dconf", "write", custom3+"command", fmt.Sprintf("'%s'", explainBin)).Run()
+	_ = exec.Command("dconf", "write", custom3+"binding", "'<Super><Alt>c'").Run()
+
 	// Register custom keybinding list
 	_ = exec.Command("dconf", "write", "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings",
-		"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/']").Run()
+		"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/']").Run()
 
 	// Core navigation shortcuts
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "close", "['<Super>q', '<Alt>F4']")
