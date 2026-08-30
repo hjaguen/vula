@@ -287,6 +287,47 @@ func checkDevTools(r *Report) {
 			})
 		}
 	}
+
+	// Check APT Mirror health
+	checkAptMirror(r)
+}
+
+func checkAptMirror(r *Report) {
+	// Parse active Ubuntu mirror from sources
+	mirrorURL := "http://archive.ubuntu.com/ubuntu/"
+	sourcesFile := "/etc/apt/sources.list.d/ubuntu.sources"
+	if data, err := os.ReadFile(sourcesFile); err == nil {
+		lines := strings.Split(string(data), "\n")
+		for _, line := range lines {
+			if strings.HasPrefix(line, "URIs:") {
+				parts := strings.Fields(line)
+				if len(parts) >= 2 {
+					mirrorURL = parts[1]
+					break
+				}
+			}
+		}
+	}
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(mirrorURL)
+	if err == nil && resp.StatusCode == http.StatusOK {
+		_ = resp.Body.Close()
+		r.Results = append(r.Results, CheckResult{
+			Category: "Developer Tooling",
+			Name:     "APT Mirror Health",
+			Status:   StatusOK,
+			Message:  fmt.Sprintf("Mirror reachable: %s", mirrorURL),
+		})
+	} else {
+		r.Results = append(r.Results, CheckResult{
+			Category: "Developer Tooling",
+			Name:     "APT Mirror Health",
+			Status:   StatusWarn,
+			Message:  fmt.Sprintf("Mirror unreachable (%s timeout/error)", mirrorURL),
+			Hint:     "Run: sudo sed -i 's|http://co.archive.ubuntu.com/ubuntu/|http://archive.ubuntu.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources && sudo apt update",
+		})
+	}
 }
 
 func checkAI(r *Report, cfg *config.Config) {
