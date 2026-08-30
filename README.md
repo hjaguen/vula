@@ -2,12 +2,12 @@
 
 > **"Vula"** *(verb, Zulu & Xhosa)*: **To open, to start, to unlock.**
 
-**Vula** is an opinionated, keyboard-first developer operating environment crafted for **Ubuntu 24.04 LTS (Noble Numbat)**. It combines the rock-solid hardware stability of Ubuntu and GNOME Shell with the elegance of a **100% Go + Charm TUI** orchestrator, native local AI intelligence, conversational real-time voice assistant, unified theming, and modern developer dotfiles.
+**Vula** is an opinionated, keyboard-first developer operating environment crafted for **Ubuntu 24.04+ LTS (Noble Numbat & future LTS releases like 26.04)**. It combines the rock-solid hardware stability of Ubuntu and GNOME Shell with the elegance of a **100% Go + Charm TUI** orchestrator, native local AI intelligence, conversational real-time voice assistant, unified theming, and modern developer dotfiles.
 
 [![CI Pipeline](https://github.com/hjaguen/vula/actions/workflows/ci.yml/badge.svg)](https://github.com/hjaguen/vula/actions/workflows/ci.yml)
 [![Security Scan](https://github.com/hjaguen/vula/actions/workflows/security.yml/badge.svg)](https://github.com/hjaguen/vula/actions/workflows/security.yml)
 [![Go Version](https://img.shields.io/badge/Go-1.24%2B-00ADD8?style=flat&logo=go)](https://go.dev/)
-[![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04%20LTS-E95420?style=flat&logo=ubuntu)](https://ubuntu.com/)
+[![Ubuntu](https://img.shields.io/badge/Ubuntu-24.04%2B%20LTS-E95420?style=flat&logo=ubuntu)](https://ubuntu.com/)
 [![Charm](https://img.shields.io/badge/TUI-Charm_Ecosystem-FF5F87?style=flat)](https://charm.sh/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -31,7 +31,7 @@ While projects like **Omakub** (Ubuntu/GNOME) and **Omarchy** (Arch/Hyprland) pa
 
 **Vula delivers this through five core pillars:**
 
-1. **Rock-Solid LTS Stability:** Built natively on top of Ubuntu 24.04 LTS (Noble Numbat) and GNOME Shell 46+. Zero kernel panics, full GPU acceleration support, and production-grade stability.
+1. **Rock-Solid LTS Stability:** Built natively for Ubuntu 24.04+ LTS (Noble Numbat and forward-compatible with 26.04+ LTS) and GNOME Shell 46+. Zero kernel panics, full GPU acceleration support, and production-grade stability.
 2. **100% Go & Charm TUI:** No fragile 5,000-line bash scripts. Vula is powered by a compiled, type-safe Go binary utilizing the [Charm](https://charm.sh) ecosystem (`bubbletea`, `lipgloss`, `huh`, `bubbles`).
 3. **Conversational Local AI & Voice:** Integrated directly into the OS with active desktop context awareness (reads focused window state and clipboard safely) powered by Ollama (`qwen2.5-coder`, `llama3.2`), local Whisper.cpp (STT), and Piper (neural TTS).
 4. **Unified Aesthetics & Theme Studio (`vula theme`):** System-wide theme switcher and interactive palette creator (TUI + Local AI) across GNOME Shell, terminal emulators (Ghostty/Kitty), Neovim, and Starship prompt.
@@ -72,7 +72,7 @@ vula/
 ## 🚀 Quickstart
 
 ### 1. Requirements
-* **OS:** Ubuntu 24.04 LTS (Noble Numbat)
+* **OS:** Ubuntu 24.04 LTS or newer (24.04+, 26.04 LTS compatible)
 * **Desktop:** GNOME Shell 46+ (Wayland or X11)
 * **Toolchain:** Go 1.24+ (managed automatically)
 
@@ -94,7 +94,7 @@ vula doctor
 Checking system readiness, desktop environment, and AI stack
 
 ◆ Operating System
-  [  OK  ] Ubuntu Version           Ubuntu 24.04 LTS (Noble Numbat) detected
+  [  OK  ] Ubuntu Version           Ubuntu 24.04.4 LTS detected (Ubuntu 24.04+ LTS compatible)
   [  OK  ] Linux Kernel             6.8.0-138-generic
 
 ◆ Desktop Environment
