@@ -439,6 +439,18 @@ var versionCmd = &cobra.Command{
 	},
 }
 
+var fetchCmd = &cobra.Command{
+	Use:   "fetch",
+	Short: "Display system metrics, hardware specs, and Vula status card",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, err := config.LoadConfig()
+		if err != nil {
+			cfg = config.DefaultConfig()
+		}
+		fmt.Println(ui.RenderFetchCard(cfg))
+	},
+}
+
 func init() {
 	aiCmd.AddCommand(aiAskCmd)
 	aiCmd.AddCommand(aiCmdSuggest)
@@ -465,6 +477,7 @@ func init() {
 	appsCmd.AddCommand(appsListCmd)
 
 	rootCmd.AddCommand(doctorCmd)
+	rootCmd.AddCommand(fetchCmd)
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(hudCmd)
 	rootCmd.AddCommand(listenCmd)

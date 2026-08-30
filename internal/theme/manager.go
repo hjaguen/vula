@@ -131,7 +131,7 @@ func (m *Manager) SaveCustomTheme(p ThemePalette) error {
 	return os.WriteFile(filePath, data, 0644)
 }
 
-// ApplyTheme sets the theme across GNOME Shell, Starship prompt, and terminal
+// ApplyTheme sets the theme across GNOME Shell, desktop wallpaper, Starship prompt, and terminal
 func (m *Manager) ApplyTheme(themeName string) error {
 	allThemes := m.GetAllThemes()
 	palette, exists := allThemes[themeName]
@@ -143,12 +143,23 @@ func (m *Manager) ApplyTheme(themeName string) error {
 	_ = gnome.SetDconfKey("org.gnome.desktop.interface", "color-scheme", "'prefer-dark'")
 	_ = gnome.SetDconfKey("org.gnome.desktop.interface", "accent-color", fmt.Sprintf("'%s'", palette.GnomeAccent))
 
-	// 2. Update Vula Config
+	// 2. Generate and Set Dynamic High-Res Theme Wallpaper
+	wpPath, err := EnsureThemeWallpaper(palette)
+	if err == nil && wpPath != "" {
+		_ = gnome.SetDconfKey("org.gnome.desktop.background", "picture-uri", fmt.Sprintf("'file://%s'", wpPath))
+		_ = gnome.SetDconfKey("org.gnome.desktop.background", "picture-uri-dark", fmt.Sprintf("'file://%s'", wpPath))
+		_ = gnome.SetDconfKey("org.gnome.desktop.background", "picture-options", "'zoom'")
+	}
+
+	// 3. Update Vula Config & Tiling Assistant Border Highlight
 	m.cfg.Theme.Palette = themeName
 	m.cfg.Theme.AccentColor = palette.AccentColor
 	_ = config.SaveConfig(m.cfg)
 
-	// 3. Update Ghostty / Terminal configs if present
+	gnomeMgr := gnome.NewManager(m.cfg)
+	_ = gnomeMgr.ConfigureTilingAssistant(m.cfg.Desktop.GapsInner, palette.AccentColor)
+
+	// 4. Update Ghostty / Terminal configs if present
 	home := os.Getenv("HOME")
 	ghosttyDir := filepath.Join(home, ".config", "ghostty")
 	if err := os.MkdirAll(ghosttyDir, 0755); err == nil {
@@ -157,7 +168,74 @@ func (m *Manager) ApplyTheme(themeName string) error {
 		_ = os.WriteFile(filepath.Join(ghosttyDir, "config"), []byte(ghosttyCfg), 0644)
 	}
 
+	// 5. Update Tmux Status Bar Accent Color
+	tmuxFile := filepath.Join(home, ".tmux.conf")
+	if _, err := os.Stat(tmuxFile); err == nil {
+		syncTmuxTheme(tmuxFile, palette)
+	}
+
 	return nil
+}
+
+// EnsureThemeWallpaper creates a sleek 4K SVG wallpaper matching the palette
+func EnsureThemeWallpaper(p ThemePalette) (string, error) {
+	home := os.Getenv("HOME")
+	wpDir := filepath.Join(home, ".config", "vula", "wallpapers")
+	if err := os.MkdirAll(wpDir, 0755); err != nil {
+		return "", err
+	}
+
+	wpPath := filepath.Join(wpDir, fmt.Sprintf("%s.svg", p.Name))
+
+	secColor := p.SecondaryColor
+	if secColor == "" {
+		secColor = p.AccentColor
+	}
+
+	svgContent := fmt.Sprintf(`<svg xmlns="http://www.w3.org/2000/svg" width="3840" height="2160" viewBox="0 0 3840 2160">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%%" cy="40%%" r="65%%">
+      <stop offset="0%%" stop-color="%s" stop-opacity="0.30"/>
+      <stop offset="50%%" stop-color="%s" stop-opacity="0.12"/>
+      <stop offset="100%%" stop-color="%s" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="accentGrad" x1="0%%" y1="0%%" x2="100%%" y2="100%%">
+      <stop offset="0%%" stop-color="%s"/>
+      <stop offset="100%%" stop-color="%s"/>
+    </linearGradient>
+  </defs>
+  <rect width="100%%" height="100%%" fill="%s"/>
+  <rect width="100%%" height="100%%" fill="url(#bgGlow)"/>
+  <circle cx="1920" cy="1080" r="500" fill="none" stroke="url(#accentGrad)" stroke-width="2" opacity="0.3"/>
+  <circle cx="1920" cy="1080" r="800" fill="none" stroke="url(#accentGrad)" stroke-width="1.5" opacity="0.15"/>
+</svg>`, p.AccentColor, secColor, p.Background, p.AccentColor, secColor, p.Background)
+
+	if err := os.WriteFile(wpPath, []byte(svgContent), 0644); err != nil {
+		return "", err
+	}
+
+	return wpPath, nil
+}
+
+func syncTmuxTheme(tmuxFile string, p ThemePalette) {
+	data, err := os.ReadFile(tmuxFile)
+	if err != nil {
+		return
+	}
+	content := string(data)
+	// Replace status bar color
+	newLeft := fmt.Sprintf("set -g status-left ' #[bold,fg=%s]⚡ VULA #[default]| '", p.AccentColor)
+	newStyle := fmt.Sprintf("set -g status-style bg='%s',fg='%s'", p.Background, p.Foreground)
+
+	lines := strings.Split(content, "\n")
+	for i, l := range lines {
+		if strings.HasPrefix(l, "set -g status-left") {
+			lines[i] = newLeft
+		} else if strings.HasPrefix(l, "set -g status-style") {
+			lines[i] = newStyle
+		}
+	}
+	_ = os.WriteFile(tmuxFile, []byte(strings.Join(lines, "\n")), 0644)
 }
 
 func (m *Manager) ListThemes() []ThemePalette {

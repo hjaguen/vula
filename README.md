@@ -115,6 +115,12 @@ Checking system readiness, desktop environment, and AI stack
 Diagnostic Summary: 12 Passed | 0 Failures
 ```
 
+### 4. TUI System Information Card (`vula fetch`)
+Display a high-impact system summary with active AI models, desktop session info, theme palette, and color blocks:
+```bash
+vula fetch
+```
+
 ---
 
 ## ⌨️ Daily Workflow & Keybindings

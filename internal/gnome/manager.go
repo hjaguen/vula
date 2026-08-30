@@ -82,7 +82,14 @@ func (m *Manager) ApplyDesktopOptimizations() error {
 	_ = SetDconfKey("org.gnome.desktop.interface", "font-name", "'Ubuntu Sans 11'")
 	_ = SetDconfKey("org.gnome.desktop.interface", "monospace-font-name", "'JetBrains Mono 11'")
 
-	// 4. Configure Developer Keybindings
+	// 4. Panel Glassmorphism & Visual Uncluttering (Blur my Shell & Just Perfection)
+	_ = SetDconfKey("org.gnome.shell.extensions.blur-my-shell.panel", "blur", "true")
+	_ = SetDconfKey("org.gnome.shell.extensions.blur-my-shell.panel", "sigma", "30")
+	_ = SetDconfKey("org.gnome.shell.extensions.blur-my-shell.panel", "brightness", "0.75")
+	_ = SetDconfKey("org.gnome.shell.extensions.just-perfection", "accessibility-menu", "false")
+	_ = SetDconfKey("org.gnome.shell.extensions.just-perfection", "clock-menu-position", "1")
+
+	// 5. Configure Developer Keybindings
 	return m.ConfigureKeybindings()
 }
 
