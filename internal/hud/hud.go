@@ -76,10 +76,10 @@ type voiceDoneMsg struct {
 
 func InitialModel(cfg *config.Config) Model {
 	ti := textinput.New()
-	ti.Placeholder = "Search actions or '?' for AI..."
+	ti.Placeholder = "Search or '?' for AI..."
 	ti.Focus()
 	ti.CharLimit = 256
-	ti.Width = 36
+	ti.Width = 28
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true)
 	ti.TextStyle = lipgloss.NewStyle().Foreground(ui.TextLightColor)
 
@@ -93,7 +93,7 @@ func InitialModel(cfg *config.Config) Model {
 	allActions := []ActionItem{
 		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Vula Doctor", Icon: "🩺", Category: "System", Command: "doctor"},
-		{Title: "Switch System Theme", Icon: "🎨", Category: "Theme", Command: "theme"},
+		{Title: "Switch Theme", Icon: "🎨", Category: "Theme", Command: "theme"},
 		{Title: "Open Terminal", Icon: "💻", Category: "Apps", Command: "terminal"},
 		{Title: "Ask Vula AI", Icon: "🤖", Category: "AI", IsAI: true},
 		{Title: "Voice Dictation", Icon: "🎙", Category: "Voice", Command: "voice_dictate"},
@@ -123,8 +123,8 @@ func InitialModel(cfg *config.Config) Model {
 		actions:     allActions,
 		filtered:    allActions,
 		selectedIdx: 0,
-		width:       50,
-		height:      22,
+		width:       38,
+		height:      20,
 	}
 }
 
@@ -139,8 +139,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-		if m.width > 50 {
-			m.input.Width = 40
+		if m.width > 38 {
+			m.input.Width = 28
 		}
 
 	case tea.KeyMsg:
@@ -153,7 +153,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.mode != ModeCommands {
 				m.mode = ModeCommands
 				m.input.SetValue("")
-				m.input.Placeholder = "Search actions or '?' for AI..."
+				m.input.Placeholder = "Search or '?' for AI..."
 				m.statusMsg = ""
 				return m, nil
 			}
@@ -166,13 +166,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.input.Placeholder = "Ask Vula AI..."
 			} else if m.mode == ModeAI {
 				m.mode = ModeVoice
-				m.input.Placeholder = "Press Enter to record voice..."
+				m.input.Placeholder = "Enter to record..."
 			} else if m.mode == ModeVoice {
 				m.mode = ModeTheme
-				m.input.Placeholder = "Select theme & press Enter..."
+				m.input.Placeholder = "Select theme..."
 			} else {
 				m.mode = ModeCommands
-				m.input.Placeholder = "Search actions or '?' for AI..."
+				m.input.Placeholder = "Search or '?' for AI..."
 			}
 			return m, nil
 
@@ -198,9 +198,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.mode == ModeTheme && len(m.themesList) > 0 {
 				selectedTheme := m.themesList[m.themeIdx]
 				if err := m.themeMgr.ApplyTheme(selectedTheme.Name); err != nil {
-					m.statusMsg = fmt.Sprintf("Theme error: %v", err)
+					m.statusMsg = fmt.Sprintf("Error: %v", err)
 				} else {
-					m.statusMsg = fmt.Sprintf("Theme switched to '%s'!", selectedTheme.DisplayName)
+					m.statusMsg = fmt.Sprintf("Theme: %s", selectedTheme.DisplayName)
 				}
 				return m, nil
 			}
@@ -208,7 +208,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.mode == ModeVoice {
 				m.loading = true
 				m.recording = true
-				m.statusMsg = "Recording 4s audio..."
+				m.statusMsg = "Recording 4s..."
 				return m, func() tea.Msg {
 					tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("vula_rec_%d.wav", time.Now().UnixNano()))
 					ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
@@ -316,7 +316,7 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	case "doctor":
 		m.mode = ModeDoctor
 		m.loading = true
-		m.statusMsg = "Running diagnostics..."
+		m.statusMsg = "Running..."
 		return *m, func() tea.Msg {
 			report := doctor.RunDiagnostics(m.cfg)
 			return doctorDoneMsg{output: report.Render()}
@@ -331,7 +331,7 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 				break
 			}
 		}
-		m.statusMsg = "Select theme & press Enter"
+		m.statusMsg = "Select theme"
 		return *m, nil
 
 	case "terminal":
@@ -342,23 +342,23 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	case "voice_assistant":
 		m.mode = ModeAI
 		m.loading = true
-		m.statusMsg = "Escuchando voz..."
+		m.statusMsg = "Escuchando..."
 		return *m, func() tea.Msg {
 			assistant := voice.NewAssistant(m.cfg)
 			q, ans, err := assistant.ListenAndRespond(context.Background(), 4)
 			if err != nil {
 				return aiDoneMsg{err: err}
 			}
-			return aiChunkMsg(fmt.Sprintf("🎙 Tú: %s\n\n⚡ Vula AI: %s", q, ans))
+			return aiChunkMsg(fmt.Sprintf("🎙 Tú: %s\n\n⚡ AI: %s", q, ans))
 		}
 
 	case "voice_dictate":
 		m.mode = ModeVoice
-		m.statusMsg = "Press Enter to record"
+		m.statusMsg = "Enter to record"
 		return *m, nil
 
 	case "voice_speak":
-		m.statusMsg = "Speaking test..."
+		m.statusMsg = "Speaking..."
 		go func() {
 			_ = m.voiceEngine.Speak(context.Background(), "Hola Mauricio, el motor de voz de Vula está activo.")
 		}()
@@ -407,17 +407,17 @@ func (m Model) View() string {
 	modeBadge := ""
 	switch m.mode {
 	case ModeCommands:
-		modeBadge = ui.SuccessBadge.Render(" ACTIONS ")
+		modeBadge = ui.SuccessBadge.Render("ACTIONS")
 	case ModeAI:
-		modeBadge = ui.BadgeStyle.Render(" AI ")
+		modeBadge = ui.BadgeStyle.Render("AI")
 	case ModeDoctor:
-		modeBadge = ui.InfoStyle.Render(" DOCTOR ")
+		modeBadge = ui.InfoStyle.Render("DOCTOR")
 	case ModeVoice:
-		modeBadge = ui.WarnBadge.Render(" VOICE ")
+		modeBadge = ui.WarnBadge.Render("VOICE")
 	case ModeConfig:
-		modeBadge = ui.BadgeStyle.Render(" CONFIG ")
+		modeBadge = ui.BadgeStyle.Render("CONFIG")
 	case ModeTheme:
-		modeBadge = ui.SuccessBadge.Render(" THEME ")
+		modeBadge = ui.SuccessBadge.Render("THEME")
 	}
 
 	topBar := lipgloss.JoinHorizontal(lipgloss.Center, headerLeft, "  ", modeBadge)
@@ -431,10 +431,10 @@ func (m Model) View() string {
 
 	switch m.mode {
 	case ModeCommands:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
 		if len(m.filtered) == 0 {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No matching actions found.\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No actions found.\n"))
 		} else {
 			for i, a := range m.filtered {
 				cursor := "  "
@@ -454,44 +454,44 @@ func (m Model) View() string {
 		}
 
 	case ModeDoctor:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
 		if m.loading {
-			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Running diagnostics...")))
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Running...")))
 		} else {
 			b.WriteString(m.doctorOutput)
 		}
 
 	case ModeAI:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
 		if m.loading {
-			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Consulting Ollama...")))
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Consulting AI...")))
 		}
 		if m.aiResponse.Len() > 0 {
 			content := m.aiResponse.String()
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Padding(0, 1).Render(content))
 			b.WriteString("\n")
 		} else if !m.loading {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type question & press Enter\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type & press Enter\n"))
 		}
 
 	case ModeVoice:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Voice Subsystem Active\n\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Voice Subsystem\n\n"))
 		if m.recording {
-			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), ui.WarnStyle.Render("Recording... Speak now!")))
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), ui.WarnStyle.Render("Recording...")))
 		} else if m.statusMsg != "" {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		} else {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Press [Enter] to record voice.\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Enter to record.\n"))
 		}
 
 	case ModeTheme:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 System Theme Selector\n\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 Theme Selector\n\n"))
 		if m.statusMsg != "" {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		}
@@ -502,7 +502,7 @@ func (m Model) View() string {
 
 			activeTag := ""
 			if t.Name == m.cfg.Theme.Palette {
-				activeTag = " " + ui.SuccessBadge.Render("ACTIVE")
+				activeTag = " " + ui.SuccessBadge.Render("✓")
 			}
 
 			if i == m.themeIdx {
@@ -510,13 +510,13 @@ func (m Model) View() string {
 				titleStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
 			}
 
-			line := fmt.Sprintf("%s%s %-16s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
+			line := fmt.Sprintf("%s%s %-12s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
 			b.WriteString(line)
 			b.WriteString("\n")
 		}
 
 	case ModeConfig:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 44)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
 		b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(m.configOutput))
 	}
@@ -524,10 +524,10 @@ func (m Model) View() string {
 	b.WriteString("\n")
 	footer := lipgloss.NewStyle().
 		Foreground(ui.MutedColor).
-		Render(" [Tab] Mode  •  [Enter] Run  •  [Esc] Close")
+		Render(" [Tab] Mode  •  [Esc] Close")
 	b.WriteString(footer)
 
-	return ui.CardStyle.Width(50).Render(b.String()) + "\n"
+	return ui.CardStyle.Width(38).Render(b.String()) + "\n"
 }
 
 func RunHUD(cfg *config.Config) error {

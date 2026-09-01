@@ -116,15 +116,15 @@ VULA_BIN="$HOME/.local/bin/vula"
 if command -v ghostty &>/dev/null; then
     ghostty --title="Vula HUD" \
             --class="vula-hud" \
-            --window-height=20 \
-            --window-width=50 \
+            --window-height=18 \
+            --window-width=38 \
             --window-decorations=false \
             --gtk-single-instance=false \
             -e "$VULA_BIN" hud
 elif command -v gnome-terminal &>/dev/null; then
-    gnome-terminal --class="vula-hud" --title="Vula HUD" --geometry=50x20 -- "$VULA_BIN" hud
+    gnome-terminal --class="vula-hud" --title="Vula HUD" --geometry=38x18 -- "$VULA_BIN" hud
 else
-    xterm -title "Vula HUD" -geometry 50x20 -e "$VULA_BIN" hud
+    xterm -title "Vula HUD" -geometry 38x18 -e "$VULA_BIN" hud
 fi
 `
 	return os.WriteFile(scriptPath, []byte(content), 0755)
