@@ -25,14 +25,25 @@ func RenderPreview(p ThemePalette) string {
 		Padding(1, 2).
 		Width(60)
 
+	hdrBg := p.HeaderBg
+	if hdrBg == "" {
+		hdrBg = p.Background
+	}
+	tbBg := p.TitlebarBg
+	if tbBg == "" {
+		tbBg = p.Background
+	}
+
 	content := fmt.Sprintf(
-		"%s\n%s\n\n  • Background:    %s\n  • Foreground:    %s\n  • Primary Accent: %s\n  • Secondary:     %s\n  • GNOME Accent:  %s",
+		"%s\n%s\n\n  • Background:      %s\n  • Foreground:      %s\n  • Primary Accent:   %s\n  • Secondary:       %s\n  • Top Bar Color:   %s\n  • Titlebar Color:  %s\n  • GNOME Accent:    %s",
 		accentStyle.Render("⚡ THEME PREVIEW: "+p.DisplayName),
 		secStyle.Render("Palette ID: "+p.Name),
 		p.Background,
 		p.Foreground,
 		accentStyle.Render(p.AccentColor+"  ■■■■■"),
 		secStyle.Render(p.SecondaryColor+"  ■■■■■"),
+		hdrBg,
+		tbBg,
 		p.GnomeAccent,
 	)
 
@@ -48,6 +59,8 @@ func RunInteractiveCreator(cfg *config.Config) (*ThemePalette, error) {
 		fg          string = "#CDD6F4"
 		accent      string = "#7AA2F7"
 		sec         string = "#06B6D4"
+		headerBg    string = "#11111B"
+		titlebarBg  string = "#181825"
 		gnomeAccent string = "purple"
 		confirm     bool   = true
 	)
@@ -92,6 +105,16 @@ func RunInteractiveCreator(cfg *config.Config) (*ThemePalette, error) {
 				Value(&sec).
 				Placeholder("#06B6D4"),
 
+			huh.NewInput().
+				Title("Top Bar Background Color (Hex)").
+				Value(&headerBg).
+				Placeholder("#11111B"),
+
+			huh.NewInput().
+				Title("Window Titlebar Color (Hex)").
+				Value(&titlebarBg).
+				Placeholder("#181825"),
+
 			huh.NewSelect[string]().
 				Title("GNOME Desktop Accent Color").
 				Options(
@@ -128,6 +151,9 @@ func RunInteractiveCreator(cfg *config.Config) (*ThemePalette, error) {
 		Foreground:     fg,
 		AccentColor:    accent,
 		SecondaryColor: sec,
+		HeaderBg:       headerBg,
+		TitlebarBg:     titlebarBg,
+		TitlebarFg:     fg,
 		GnomeAccent:    gnomeAccent,
 		GtkTheme:       "Yaru-dark",
 		IsCustom:       true,
@@ -162,6 +188,8 @@ Respond ONLY with a JSON object strictly adhering to this schema:
   "foreground": "#HEX",
   "accent_color": "#HEX",
   "secondary_color": "#HEX",
+  "header_bg": "#HEX",
+  "titlebar_bg": "#HEX",
   "gnome_accent": "one of: purple, blue, teal, green, orange, red, slate"
 }`
 
@@ -188,6 +216,8 @@ Respond ONLY with a JSON object strictly adhering to this schema:
 			Foreground:     "#E2E8F0",
 			AccentColor:    "#7C3AED",
 			SecondaryColor: "#06B6D4",
+			HeaderBg:       "#0D0D12",
+			TitlebarBg:     "#1A1A24",
 			GnomeAccent:    "purple",
 		}
 	}
@@ -198,6 +228,9 @@ Respond ONLY with a JSON object strictly adhering to this schema:
 	}
 	if palette.DisplayName == "" {
 		palette.DisplayName = "AI " + prompt
+	}
+	if palette.TitlebarFg == "" {
+		palette.TitlebarFg = palette.Foreground
 	}
 	palette.GtkTheme = "Yaru-dark"
 	palette.IsCustom = true
