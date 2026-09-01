@@ -69,6 +69,7 @@ type Model struct {
 type aiChunkMsg string
 type aiDoneMsg struct{ err error }
 type doctorDoneMsg struct{ output string }
+type appStoreDoneMsg struct{ err error }
 type voiceDoneMsg struct {
 	text string
 	err  error
@@ -276,6 +277,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.doctorOutput = msg.output
 		m.statusMsg = "Complete"
 
+	case appStoreDoneMsg:
+		m.mode = ModeCommands
+		m.statusMsg = "App Store closed"
+
 	case voiceDoneMsg:
 		m.recording = false
 		m.loading = false
@@ -316,14 +321,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	switch action.Command {
 	case "apps_store":
-		go func() {
-			home := os.Getenv("HOME")
-			vulaBin := filepath.Join(home, ".local", "bin", "vula")
-			cmd := exec.Command("gnome-terminal", "--title=Vula App Store", "--", vulaBin, "apps", "ui")
-			_ = cmd.Start()
-		}()
-		m.quitting = true
-		return *m, tea.Quit
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "apps", "ui")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return appStoreDoneMsg{err: err}
+		})
 
 	case "voice_listen":
 		m.mode = ModeAI
