@@ -347,7 +347,7 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		m.statusMsg = "Running..."
 		return *m, func() tea.Msg {
 			report := doctor.RunDiagnostics(m.cfg)
-			return doctorDoneMsg{output: report.Render()}
+			return doctorDoneMsg{output: report.RenderCompact()}
 		}
 
 	case "theme":

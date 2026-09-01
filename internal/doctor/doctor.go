@@ -454,3 +454,39 @@ func (r *Report) Render() string {
 
 	return b.String()
 }
+
+func (r *Report) RenderCompact() string {
+	b := strings.Builder{}
+
+	hasIssues := false
+	for _, res := range r.Results {
+		if res.Status != StatusOK {
+			hasIssues = true
+			var badge string
+			if res.Status == StatusWarn {
+				badge = ui.WarnBadge.Render("WARN")
+			} else {
+				badge = ui.ErrorBadge.Render("FAIL")
+			}
+			b.WriteString(fmt.Sprintf("%s %s\n", badge, lipgloss.NewStyle().Bold(true).Render(res.Name)))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(fmt.Sprintf("  %s\n", res.Message)))
+			if res.Hint != "" {
+				b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Render(fmt.Sprintf("  ↳ %s\n", res.Hint)))
+			}
+			b.WriteString("\n")
+		}
+	}
+
+	if !hasIssues {
+		b.WriteString(ui.SuccessStyle.Render("  ✓ All system checks passed!\n\n"))
+	}
+
+	b.WriteString(fmt.Sprintf("Summary: %s Passed | %s Warn | %s Fail\n",
+		ui.SuccessStyle.Render(fmt.Sprintf("%d", r.Passed)),
+		ui.WarnStyle.Render(fmt.Sprintf("%d", r.Warnings)),
+		ui.ErrorStyle.Render(fmt.Sprintf("%d", r.Failures)),
+	))
+
+	return b.String()
+}
+
