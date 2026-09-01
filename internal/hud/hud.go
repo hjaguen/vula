@@ -92,6 +92,8 @@ func InitialModel(cfg *config.Config) Model {
 
 	allActions := []ActionItem{
 		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
+		{Title: "Voice Listen AI", Icon: "🎧", Category: "Voice", Command: "voice_listen"},
+		{Title: "App Store TUI", Icon: "📦", Category: "Apps", Command: "apps_store"},
 		{Title: "Vula Doctor", Icon: "🩺", Category: "System", Command: "doctor"},
 		{Title: "Switch Theme", Icon: "🎨", Category: "Theme", Command: "theme"},
 		{Title: "Open Terminal", Icon: "💻", Category: "Apps", Command: "terminal"},
@@ -124,7 +126,7 @@ func InitialModel(cfg *config.Config) Model {
 		filtered:    allActions,
 		selectedIdx: 0,
 		width:       38,
-		height:      20,
+		height:      22,
 	}
 }
 
@@ -313,6 +315,29 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	switch action.Command {
+	case "apps_store":
+		go func() {
+			home := os.Getenv("HOME")
+			vulaBin := filepath.Join(home, ".local", "bin", "vula")
+			cmd := exec.Command("gnome-terminal", "--title=Vula App Store", "--", vulaBin, "apps", "ui")
+			_ = cmd.Start()
+		}()
+		m.quitting = true
+		return *m, tea.Quit
+
+	case "voice_listen":
+		m.mode = ModeAI
+		m.loading = true
+		m.statusMsg = "Escuchando tu voz..."
+		return *m, func() tea.Msg {
+			assistant := voice.NewAssistant(m.cfg)
+			q, ans, err := assistant.ListenAndRespond(context.Background(), 4)
+			if err != nil {
+				return aiDoneMsg{err: err}
+			}
+			return aiChunkMsg(fmt.Sprintf("🎙 Tú: %s\n\n⚡ Vula AI: %s", q, ans))
+		}
+
 	case "doctor":
 		m.mode = ModeDoctor
 		m.loading = true
