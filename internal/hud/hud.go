@@ -70,6 +70,7 @@ type aiChunkMsg string
 type aiDoneMsg struct{ err error }
 type doctorDoneMsg struct{ output string }
 type appStoreDoneMsg struct{ err error }
+type keysDoneMsg struct{ err error }
 type voiceDoneMsg struct {
 	text string
 	err  error
@@ -95,6 +96,7 @@ func InitialModel(cfg *config.Config) Model {
 		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Voice Listen AI", Icon: "🎧", Category: "Voice", Command: "voice_listen"},
 		{Title: "App Store TUI", Icon: "📦", Category: "Apps", Command: "apps_store"},
+		{Title: "Keybindings Map", Icon: "⌨️", Category: "System", Command: "keys_map"},
 		{Title: "Vula Doctor", Icon: "🩺", Category: "System", Command: "doctor"},
 		{Title: "Switch Theme", Icon: "🎨", Category: "Theme", Command: "theme"},
 		{Title: "Open Terminal", Icon: "💻", Category: "Apps", Command: "terminal"},
@@ -281,6 +283,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.mode = ModeCommands
 		m.statusMsg = "App Store closed"
 
+	case keysDoneMsg:
+		m.mode = ModeCommands
+		m.statusMsg = "Keybindings closed"
+
 	case voiceDoneMsg:
 		m.recording = false
 		m.loading = false
@@ -326,6 +332,14 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		c := exec.Command(vulaBin, "apps", "ui")
 		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
 			return appStoreDoneMsg{err: err}
+		})
+
+	case "keys_map":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "keys")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
 		})
 
 	case "voice_listen":

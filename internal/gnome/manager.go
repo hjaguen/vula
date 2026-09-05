@@ -10,6 +10,13 @@ import (
 	"github.com/vula-os/vula/internal/config"
 )
 
+type ExtensionMeta struct {
+	UUID        string
+	Name        string
+	Description string
+	Essential   bool
+}
+
 type Manager struct {
 	cfg *config.Config
 }
@@ -18,25 +25,18 @@ func NewManager(cfg *config.Config) *Manager {
 	return &Manager{cfg: cfg}
 }
 
-type ExtensionInfo struct {
-	UUID        string
-	Name        string
-	Description string
-	Essential   bool
-}
-
-var RecommendedExtensions = []ExtensionInfo{
+var RecommendedExtensions = []ExtensionMeta{
 	{
-		UUID:        "forge@jmmaranan.com",
-		Name:        "Forge Tiling",
-		Description: "Tiling window management with keyboard shortcuts",
+		UUID:        "tiling-assistant@leleat-on-github",
+		Name:        "Tiling Assistant",
+		Description: "Advanced window snapping, auto-tiling, layouts, and gaps",
 		Essential:   true,
 	},
 	{
 		UUID:        "blur-my-shell@aunetx",
 		Name:        "Blur my Shell",
-		Description: "Aesthetic blur effect on panel, dash, and overview",
-		Essential:   false,
+		Description: "Modern glassmorphism blur effects for panel and overview",
+		Essential:   true,
 	},
 	{
 		UUID:        "appindicatorsupport@rgcjonas.gmail.com",
@@ -65,6 +65,39 @@ func GetDconfKey(schema, key string) (string, error) {
 		return "", err
 	}
 	return strings.TrimSpace(string(out)), nil
+}
+
+// GetDconfKeyPath retrieves a dconf key at an explicit dconf path
+func GetDconfKeyPath(path, key string) (string, error) {
+	fullPath := path + key
+	out, err := exec.Command("dconf", "read", fullPath).Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+// RegisterCustomKeybinding registers or updates a custom keybinding by ID in dconf
+func RegisterCustomKeybinding(id, name, command, binding string) error {
+	path := fmt.Sprintf("/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom-vula-%s/", id)
+	_ = exec.Command("dconf", "write", path+"name", fmt.Sprintf("'%s'", name)).Run()
+	_ = exec.Command("dconf", "write", path+"command", fmt.Sprintf("'%s'", command)).Run()
+	_ = exec.Command("dconf", "write", path+"binding", fmt.Sprintf("'%s'", binding)).Run()
+
+	// Update list of custom keybindings array
+	out, _ := exec.Command("dconf", "read", "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings").Output()
+	rawList := strings.TrimSpace(string(out))
+
+	if !strings.Contains(rawList, path) {
+		if rawList == "" || rawList == "@as []" || rawList == "[]" {
+			rawList = fmt.Sprintf("['%s']", path)
+		} else {
+			rawList = strings.TrimSuffix(rawList, "]") + fmt.Sprintf(", '%s']", path)
+		}
+		_ = exec.Command("dconf", "write", "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings", rawList).Run()
+	}
+
+	return nil
 }
 
 // ApplyDesktopOptimizations tunes GNOME Shell for high performance and developer ergonomics
@@ -139,39 +172,19 @@ func (m *Manager) ConfigureKeybindings() error {
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-input-source-backward", "[]")
 
 	home := os.Getenv("HOME")
+	vulaBin := filepath.Join(home, ".local", "bin", "vula")
 	hudBin := filepath.Join(home, ".local", "bin", "vula-hud-launch")
-	voiceBin := filepath.Join(home, ".local", "bin", "vula") + " voice record"
-	listenBin := filepath.Join(home, ".local", "bin", "vula") + " listen"
+	voiceBin := vulaBin + " voice record"
+	listenBin := vulaBin + " listen"
+	explainBin := vulaBin + " ai explain"
+	keysBin := fmt.Sprintf("gnome-terminal --title=\"Vula Keybindings\" -- %s keys", vulaBin)
 
-	// Custom Keybinding 1: Vula Floating HUD
-	bindingPath := "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
-	custom0 := bindingPath + "/custom0/"
-	_ = exec.Command("dconf", "write", custom0+"name", "'Vula HUD'").Run()
-	_ = exec.Command("dconf", "write", custom0+"command", fmt.Sprintf("'%s'", hudBin)).Run()
-	_ = exec.Command("dconf", "write", custom0+"binding", "'<Super>space'").Run()
-
-	// Custom Keybinding 2: Voice Dictation
-	custom1 := bindingPath + "/custom1/"
-	_ = exec.Command("dconf", "write", custom1+"name", "'Vula Voice Dictate'").Run()
-	_ = exec.Command("dconf", "write", custom1+"command", fmt.Sprintf("'%s'", voiceBin)).Run()
-	_ = exec.Command("dconf", "write", custom1+"binding", "'<Super><Alt>v'").Run()
-
-	// Custom Keybinding 3: Active AI Voice Assistant
-	custom2 := bindingPath + "/custom2/"
-	_ = exec.Command("dconf", "write", custom2+"name", "'Vula Voice AI Assistant'").Run()
-	_ = exec.Command("dconf", "write", custom2+"command", fmt.Sprintf("'%s'", listenBin)).Run()
-	_ = exec.Command("dconf", "write", custom2+"binding", "'<Super><Alt>a'").Run()
-
-	// Custom Keybinding 4: AI Selection/Clipboard Explain
-	explainBin := filepath.Join(home, ".local", "bin", "vula") + " ai explain"
-	custom3 := bindingPath + "/custom3/"
-	_ = exec.Command("dconf", "write", custom3+"name", "'Vula AI Explain Selection'").Run()
-	_ = exec.Command("dconf", "write", custom3+"command", fmt.Sprintf("'%s'", explainBin)).Run()
-	_ = exec.Command("dconf", "write", custom3+"binding", "'<Super><Alt>c'").Run()
-
-	// Register custom keybinding list
-	_ = exec.Command("dconf", "write", "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings",
-		"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/']").Run()
+	// Register Vula Custom Keybindings
+	_ = RegisterCustomKeybinding("hud", "Vula HUD", hudBin, "<Super>space")
+	_ = RegisterCustomKeybinding("voice_dictate", "Vula Voice Dictate", voiceBin, "<Super><Alt>v")
+	_ = RegisterCustomKeybinding("voice_assistant", "Vula Voice AI Assistant", listenBin, "<Super><Alt>a")
+	_ = RegisterCustomKeybinding("ai_explain", "Vula AI Explain Selection", explainBin, "<Super><Alt>c")
+	_ = RegisterCustomKeybinding("keys_map", "Vula Keybindings Cheat-Sheet", keysBin, "<Super><Shift>k")
 
 	// Core navigation shortcuts
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "close", "['<Super>q', '<Alt>F4']")

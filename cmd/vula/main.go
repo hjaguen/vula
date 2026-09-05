@@ -18,6 +18,7 @@ import (
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/hud"
 	"github.com/vula-os/vula/internal/installer"
+	"github.com/vula-os/vula/internal/keys"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
@@ -622,6 +623,42 @@ var wallpaperFetchCmd = &cobra.Command{
 	},
 }
 
+var keysCmd = &cobra.Command{
+	Use:   "keys",
+	Short: "Interactive TUI visualizer & customizer for Vula desktop hotkeys",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		if err := keys.RunInteractiveKeymap(cfg); err != nil {
+			log.Error("Keybindings editor error", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
+var keysListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all registered desktop hotkeys in terminal table",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(keys.RenderTable())
+	},
+}
+
+var keysSetCmd = &cobra.Command{
+	Use:   "set [id] [shortcut]",
+	Short: "Update keybinding shortcut in GNOME dconf (e.g. vula keys set hud '<Super>space')",
+	Args:  cobra.ExactArgs(2),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		id := args[0]
+		shortcut := args[1]
+		if err := keys.SetKeybinding(cfg, id, shortcut); err != nil {
+			log.Error("Failed to update keybinding", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Updated keybinding '%s' to %s in GNOME!\n", ui.SuccessStyle.Render("✓"), id, keys.FormatKeycap(shortcut))
+	},
+}
+
 func init() {
 	aiCmd.AddCommand(aiAskCmd)
 	aiCmd.AddCommand(aiCmdSuggest)
@@ -657,6 +694,9 @@ func init() {
 	appsCmd.AddCommand(appsListCmd)
 	appsCmd.AddCommand(appsUICmd)
 
+	keysCmd.AddCommand(keysListCmd)
+	keysCmd.AddCommand(keysSetCmd)
+
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(fetchCmd)
 	rootCmd.AddCommand(installCmd)
@@ -669,6 +709,7 @@ func init() {
 	rootCmd.AddCommand(wallpaperCmd)
 	rootCmd.AddCommand(dotfilesCmd)
 	rootCmd.AddCommand(appsCmd)
+	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 
