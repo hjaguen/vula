@@ -199,6 +199,33 @@ var voiceSpeakCmd = &cobra.Command{
 	},
 }
 
+var voiceTestCmd = &cobra.Command{
+	Use:   "test",
+	Short: "Test default microphone audio recording level and diagnostics",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		engine := voice.NewEngine(cfg)
+
+		fmt.Println(ui.InfoStyle.Render("🎙 Probando micrófono durante 3 segundos... (¡Habla ahora!)"))
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer cancel()
+
+		maxVol, err := engine.TestMicrophone(ctx)
+		if err != nil {
+			log.Error("Prueba de micrófono fallida", "error", err)
+			os.Exit(1)
+		}
+
+		if maxVol > -45.0 {
+			fmt.Printf("\n%s Se detectó entrada de audio activa (Nivel máximo: %.1f dB)\n", ui.SuccessStyle.Render("✓"), maxVol)
+			fmt.Println("  El micrófono está capturando audio correctamente.")
+		} else {
+			fmt.Printf("\n%s Se detectó silencio o nivel de audio muy bajo (Nivel máximo: %.1f dB)\n", ui.WarnStyle.Render("⚠️"), maxVol)
+			fmt.Println("  Revisa que el micrófono interno no tenga silenciador activado o revisa el volumen en Configuración -> Sonido.")
+		}
+	},
+}
+
 var listenCmd = &cobra.Command{
 	Use:   "listen [seconds]",
 	Short: "Start active listening AI assistant (Whisper STT -> Ollama -> Piper TTS)",
@@ -894,6 +921,7 @@ func init() {
 
 	voiceCmd.AddCommand(voiceRecordCmd)
 	voiceCmd.AddCommand(voiceSpeakCmd)
+	voiceCmd.AddCommand(voiceTestCmd)
 	voiceCmd.AddCommand(voiceDaemonCmd)
 
 	desktopCmd.AddCommand(desktopSetupCmd)

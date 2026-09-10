@@ -37,14 +37,51 @@ func (e *Engine) RecordAudio(ctx context.Context, outputFile string, maxDuration
 	}
 
 	if _, err := exec.LookPath("ffmpeg"); err == nil {
-		cmd = exec.CommandContext(ctx, "ffmpeg", "-y", "-f", "pulse", "-i", "default", "-ar", "16000", "-ac", "1", "-t", fmt.Sprintf("%d", durationSec), outputFile)
+		cmd = exec.CommandContext(ctx, "ffmpeg", "-y", "-f", "pulse", "-i", "@DEFAULT_SOURCE@", "-ar", "16000", "-ac", "1", "-t", fmt.Sprintf("%d", durationSec), outputFile)
+	} else if _, err := exec.LookPath("pw-record"); err == nil {
+		recCtx, cancel := context.WithTimeout(ctx, time.Duration(durationSec)*time.Second)
+		defer cancel()
+		cmd = exec.CommandContext(recCtx, "pw-record", "--rate", "16000", "--channels", "1", outputFile)
+		_ = cmd.Run()
+		return nil
 	} else if _, err := exec.LookPath("arecord"); err == nil {
 		cmd = exec.CommandContext(ctx, "arecord", "-D", "default", "-f", "S16_LE", "-r", "16000", "-c", "1", "-d", fmt.Sprintf("%d", durationSec), outputFile)
 	} else {
-		return fmt.Errorf("no audio recorder (ffmpeg or arecord) found in PATH")
+		return fmt.Errorf("no audio recorder (ffmpeg, pw-record or arecord) found in PATH")
 	}
 
 	return cmd.Run()
+}
+
+// TestMicrophone performs a 3-second diagnostic recording and returns volume stats
+func (e *Engine) TestMicrophone(ctx context.Context) (float64, error) {
+	tempFile := filepath.Join(os.TempDir(), fmt.Sprintf("vula_mictest_%d.wav", time.Now().UnixNano()))
+	defer os.Remove(tempFile)
+
+	if err := e.RecordAudio(ctx, tempFile, 3*time.Second); err != nil {
+		return 0, err
+	}
+
+	out, err := exec.CommandContext(ctx, "ffmpeg", "-i", tempFile, "-af", "volumedetect", "-f", "null", "-").CombinedOutput()
+	if err != nil {
+		return 0, nil
+	}
+
+	outStr := string(out)
+	for _, line := range strings.Split(outStr, "\n") {
+		if strings.Contains(line, "max_volume:") {
+			parts := strings.Split(line, "max_volume:")
+			if len(parts) == 2 {
+				valStr := strings.TrimSpace(strings.TrimSuffix(strings.TrimSpace(parts[1]), "dB"))
+				var maxVol float64
+				if _, err := fmt.Sscanf(valStr, "%f", &maxVol); err == nil {
+					return maxVol, nil
+				}
+			}
+		}
+	}
+
+	return 0, nil
 }
 
 // Transcribe converts recorded WAV audio file into text using Whisper
