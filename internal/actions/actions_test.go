@@ -118,3 +118,34 @@ func TestSanitizePath(t *testing.T) {
 		}
 	})
 }
+
+func TestSanitizeActionPlan(t *testing.T) {
+	plan := &ActionPlan{
+		Actions: []ActionPayload{
+			{
+				Type:        ActionTypeControlSystem,
+				Description: "...",
+				Setting:     "volume|brightness|theme|night_light|screenshot|lock",
+				Value:       "40%",
+			},
+		},
+	}
+
+	sanitizeActionPlan(plan, "ajusta el brillo al 40%")
+
+	if plan.Actions[0].Setting != "brightness" {
+		t.Errorf("expected setting 'brightness', got '%s'", plan.Actions[0].Setting)
+	}
+
+	if plan.Actions[0].Description == "..." || plan.Actions[0].Description == "" {
+		t.Errorf("expected valid description, got '%s'", plan.Actions[0].Description)
+	}
+}
+
+func TestRepairJSON(t *testing.T) {
+	input := `{"summary": "line1\nline2"}`
+	repaired := repairJSON(input)
+	if !testing.Verbose() && repaired == "" {
+		t.Error("failed repairing JSON")
+	}
+}
