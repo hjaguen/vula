@@ -512,7 +512,11 @@ func (m Model) View() string {
 		}
 		if m.aiResponse.Len() > 0 {
 			content := m.aiResponse.String()
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Padding(0, 1).Render(content))
+			rendered := lipgloss.NewStyle().
+				Foreground(ui.TextLightColor).
+				Width(32).
+				Render(content)
+			b.WriteString(rendered)
 			b.WriteString("\n")
 		} else if !m.loading {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type & press Enter\n"))

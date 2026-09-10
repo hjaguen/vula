@@ -58,13 +58,16 @@ func NewClient(cfg *config.Config) *Client {
 	return &Client{
 		cfg: cfg,
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second,
+			Timeout: 0, // Streaming responses managed via request context
 		},
 	}
 }
 
 // Ask sends a prompt and streams back chunks via the callback
 func (c *Client) Ask(ctx context.Context, prompt string, streamHandler func(chunk string)) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
+	defer cancel()
+
 	host := c.cfg.AI.OllamaHost
 	if host == "" {
 		host = "http://localhost:11434"
