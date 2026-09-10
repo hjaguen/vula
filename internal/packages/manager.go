@@ -39,7 +39,7 @@ func (m *Manager) InstallAptPackages(packages []string) error {
 		return nil // Idempotent: already installed
 	}
 
-	args := append([]string{"apt-get", "install", "-y", "--no-install-recommends"}, missing...)
+	args := append([]string{"apt-get", "-o", "DPkg::Lock::Timeout=30", "install", "-y", "--no-install-recommends"}, missing...)
 	cmd := exec.Command("sudo", args...)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
@@ -47,7 +47,7 @@ func (m *Manager) InstallAptPackages(packages []string) error {
 	err := cmd.Run()
 	if err != nil {
 		// Fallback: try repairing broken dependencies and retry
-		fixCmd := exec.Command("sudo", "apt-get", "-f", "install", "-y", "--no-install-recommends")
+		fixCmd := exec.Command("sudo", "apt-get", "-o", "DPkg::Lock::Timeout=30", "-f", "install", "-y", "--no-install-recommends")
 		fixCmd.Stdin = os.Stdin
 		fixCmd.Stdout = os.Stdout
 		fixCmd.Stderr = os.Stderr
