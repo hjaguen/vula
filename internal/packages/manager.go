@@ -39,11 +39,35 @@ func (m *Manager) InstallAptPackages(packages []string) error {
 		return nil // Idempotent: already installed
 	}
 
+	// Purge residual package configs (rc status) that conflict with containerd.io/docker
+	purgeCmd := exec.Command("sudo", "dpkg", "--purge", "containerd", "docker.io")
+	purgeCmd.Stdin = os.Stdin
+	purgeCmd.Stdout = os.Stdout
+	purgeCmd.Stderr = os.Stderr
+	_ = purgeCmd.Run()
+
 	args := append([]string{"apt-get", "install", "-y", "--no-install-recommends"}, missing...)
 	cmd := exec.Command("sudo", args...)
+	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	err := cmd.Run()
+	if err != nil {
+		// Fallback: try repairing broken dependencies and retry
+		fixCmd := exec.Command("sudo", "apt-get", "-f", "install", "-y", "--no-install-recommends")
+		fixCmd.Stdin = os.Stdin
+		fixCmd.Stdout = os.Stdout
+		fixCmd.Stderr = os.Stderr
+		_ = fixCmd.Run()
+
+		cmdRetry := exec.Command("sudo", args...)
+		cmdRetry.Stdin = os.Stdin
+		cmdRetry.Stdout = os.Stdout
+		cmdRetry.Stderr = os.Stderr
+		return cmdRetry.Run()
+	}
+
+	return nil
 }
 
 // VerifyChecksum verifies that a local file matches an expected SHA256 hex string
