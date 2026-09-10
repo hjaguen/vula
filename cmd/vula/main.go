@@ -10,6 +10,7 @@ import (
 
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
+	"github.com/vula-os/vula/internal/actions"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/apps"
 	"github.com/vula-os/vula/internal/config"
@@ -803,6 +804,68 @@ var aiConfigCmd = &cobra.Command{
 	},
 }
 
+var doCmd = &cobra.Command{
+	Use:   "do [instruction]",
+	Short: "Execute OS control actions using natural language AI intent parser",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		client := ai.NewClient(cfg)
+		userPrompt := strings.Join(args, " ")
+
+		fmt.Printf("\n%s Parsing OS action intent...\n\n", ui.InfoStyle.Render("⚡"))
+		plan, err := actions.ParseIntent(context.Background(), client, userPrompt)
+		if err != nil {
+			log.Error("Failed to parse OS action plan", "error", err)
+			os.Exit(1)
+		}
+
+		if err := actions.ExecutePlan(context.Background(), plan, cfg); err != nil {
+			log.Error("Failed executing OS action plan", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
+var actionsCmd = &cobra.Command{
+	Use:   "actions",
+	Short: "Inspect OS actions history and audit logs",
+}
+
+var actionsHistoryCmd = &cobra.Command{
+	Use:   "history",
+	Short: "Show audit log entries for all OS actions executed by Vula",
+	Run: func(cmd *cobra.Command, args []string) {
+		logs, err := actions.GetAuditLogs()
+		if err != nil {
+			log.Error("Failed to read audit logs", "error", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(ui.RenderHeader("OS Actions Audit Log", fmt.Sprintf("Found %d audit entries in ~/.config/vula/audit.log", len(logs))))
+		if len(logs) == 0 {
+			fmt.Println(ui.WarnStyle.Render("No audit log entries found."))
+			return
+		}
+
+		for _, entry := range logs {
+			timeStr := entry.Timestamp.Format("2006-01-02 15:04:05")
+			statusStyle := ui.SuccessStyle
+			if entry.ExecutedStatus != "SUCCESS" {
+				statusStyle = ui.WarnStyle
+			}
+			fmt.Printf("  • [%s] %-9s %-12s | Prompt: \"%s\" | %s\n",
+				timeStr,
+				ui.InfoStyle.Render(string(entry.Risk)),
+				statusStyle.Render(entry.ExecutedStatus),
+				entry.UserPrompt,
+				entry.Action.Description,
+			)
+		}
+		fmt.Println()
+	},
+}
+
 func init() {
 	aiConfigCmd.Flags().StringVar(&cfgMode, "mode", "", "AI mode: hybrid, local, cloud")
 	aiConfigCmd.Flags().StringVar(&cfgProvider, "provider", "", "Cloud provider: gemini, groq, ollama-cloud, openai")
@@ -819,6 +882,8 @@ func init() {
 	aiCmd.AddCommand(aiExplainCmd)
 	aiCmd.AddCommand(aiStatusCmd)
 	aiCmd.AddCommand(aiConfigCmd)
+
+	actionsCmd.AddCommand(actionsHistoryCmd)
 
 	voiceCmd.AddCommand(voiceRecordCmd)
 	voiceCmd.AddCommand(voiceSpeakCmd)
@@ -850,6 +915,8 @@ func init() {
 	keysCmd.AddCommand(keysListCmd)
 	keysCmd.AddCommand(keysSetCmd)
 
+	rootCmd.AddCommand(doCmd)
+	rootCmd.AddCommand(actionsCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(fetchCmd)
 	rootCmd.AddCommand(installCmd)
