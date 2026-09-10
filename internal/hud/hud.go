@@ -80,7 +80,7 @@ type voiceDoneMsg struct {
 
 func InitialModel(cfg *config.Config) Model {
 	ti := textinput.New()
-	ti.Placeholder = "Search or '?' for AI..."
+	ti.Placeholder = "Buscar, 'do ...' para acción, '?' para IA..."
 	ti.Focus()
 	ti.CharLimit = 256
 	ti.Width = 28
@@ -161,7 +161,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.mode != ModeCommands {
 				m.mode = ModeCommands
 				m.input.SetValue("")
-				m.input.Placeholder = "Search or '?' for AI..."
+				m.input.Placeholder = "Buscar, 'do ...' para acción, '?' para IA..."
 				m.statusMsg = ""
 				return m, nil
 			}
@@ -170,17 +170,25 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case "tab":
 			if m.mode == ModeCommands {
+				m.mode = ModeDo
+				m.input.SetValue("do ")
+				m.input.Placeholder = "Acción de sistema (ej: 'ajusta el brillo al 40%')..."
+			} else if m.mode == ModeDo {
 				m.mode = ModeAI
-				m.input.Placeholder = "Ask Vula AI..."
+				m.input.SetValue("")
+				m.input.Placeholder = "Pregunta a Vula AI..."
 			} else if m.mode == ModeAI {
 				m.mode = ModeVoice
-				m.input.Placeholder = "Enter to record..."
+				m.input.SetValue("")
+				m.input.Placeholder = "Enter para grabar por voz..."
 			} else if m.mode == ModeVoice {
 				m.mode = ModeTheme
-				m.input.Placeholder = "Select theme..."
+				m.input.SetValue("")
+				m.input.Placeholder = "Selecciona un tema..."
 			} else {
 				m.mode = ModeCommands
-				m.input.Placeholder = "Search or '?' for AI..."
+				m.input.SetValue("")
+				m.input.Placeholder = "Buscar, 'do ...' para acción, '?' para IA..."
 			}
 			return m, nil
 
@@ -356,8 +364,8 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	switch action.Command {
 	case "os_action":
 		m.mode = ModeDo
-		m.input.SetValue("")
-		m.input.Placeholder = "Enter OS action (e.g., 'ajusta el brillo al 40%')..."
+		m.input.SetValue("do ")
+		m.input.Placeholder = "Escribe tu acción (ej: 'ajusta el brillo al 40%')..."
 		return *m, nil
 
 	case "apps_store":
@@ -483,24 +491,26 @@ func (m Model) View() string {
 	modeBadge := ""
 	switch m.mode {
 	case ModeCommands:
-		modeBadge = ui.SuccessBadge.Render("ACTIONS")
+		modeBadge = ui.SuccessBadge.Render("COMANDOS")
+	case ModeDo:
+		modeBadge = ui.SuccessBadge.Render("⚡ ACCIÓN OS")
 	case ModeAI:
-		modeBadge = ui.BadgeStyle.Render("AI")
+		modeBadge = ui.BadgeStyle.Render("🤖 IA CHAT")
 	case ModeDoctor:
 		modeBadge = ui.InfoStyle.Render("DOCTOR")
 	case ModeVoice:
-		modeBadge = ui.WarnBadge.Render("VOICE")
+		modeBadge = ui.WarnBadge.Render("🎙 VOZ")
 	case ModeConfig:
 		modeBadge = ui.BadgeStyle.Render("CONFIG")
 	case ModeTheme:
-		modeBadge = ui.SuccessBadge.Render("THEME")
+		modeBadge = ui.SuccessBadge.Render("🎨 TEMA")
 	}
 
 	topBar := lipgloss.JoinHorizontal(lipgloss.Center, headerLeft, "  ", modeBadge)
 	b.WriteString(topBar)
 	b.WriteString("\n\n")
 
-	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice || m.mode == ModeTheme {
+	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice || m.mode == ModeTheme || m.mode == ModeDo {
 		b.WriteString(m.input.View())
 		b.WriteString("\n\n")
 	}
