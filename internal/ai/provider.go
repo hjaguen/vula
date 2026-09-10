@@ -73,6 +73,33 @@ func (p *OllamaProvider) Ask(ctx context.Context, prompt string, systemPrompt st
 		model = "qwen2.5-coder:1.5b"
 	}
 
+	// Auto-resolve to an installed local model if configured model is not pulled
+	if tagsReq, err := p.httpClient.Get(host + "/api/tags"); err == nil {
+		var tags TagsResponse
+		if json.NewDecoder(tagsReq.Body).Decode(&tags) == nil && len(tags.Models) > 0 {
+			hasModel := false
+			var firstValidModel string
+			for _, m := range tags.Models {
+				// Skip embedding models
+				if strings.Contains(m.Name, "embed") {
+					continue
+				}
+				if firstValidModel == "" {
+					firstValidModel = m.Name
+				}
+				if m.Name == model || strings.HasPrefix(m.Name, model) || strings.HasPrefix(model, strings.Split(m.Name, ":")[0]) {
+					hasModel = true
+					model = m.Name
+					break
+				}
+			}
+			if !hasModel && firstValidModel != "" {
+				model = firstValidModel
+			}
+		}
+		_ = tagsReq.Body.Close()
+	}
+
 	var chatOpts *ChatOptions
 	if p.cfg.AI.NumThreads > 0 || p.cfg.AI.ContextLength > 0 {
 		chatOpts = &ChatOptions{
