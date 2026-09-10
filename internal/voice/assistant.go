@@ -56,8 +56,8 @@ func (a *Assistant) ListenAndRespond(ctx context.Context, durationSec int) (stri
 
 	transcription = strings.TrimSpace(transcription)
 	if transcription == "" {
-		_ = exec.Command("notify-send", "-a", "Vula AI", "Vula AI", "No se detectó audio de voz.").Start()
-		return "", "", fmt.Errorf("no se detectó audio de voz")
+		_ = exec.Command("notify-send", "-a", "Vula AI", "Vula AI", "No se detectó audio de voz en los segundos de grabación.").Start()
+		return "", "", fmt.Errorf("no se detectó audio de voz hablada. Habla cerca al micrófono o especifica más tiempo (ej. 'vula listen 6')")
 	}
 
 	// Send visual notification that AI is computing response

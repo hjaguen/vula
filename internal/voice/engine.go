@@ -62,7 +62,13 @@ func (e *Engine) Transcribe(ctx context.Context, audioFile string) (string, erro
 		if err != nil {
 			return "", fmt.Errorf("whisper-cpp failed: %w", err)
 		}
-		return strings.TrimSpace(string(out)), nil
+		resText := strings.TrimSpace(string(out))
+		lowerRes := strings.ToLower(resText)
+		if lowerRes == "[música]" || lowerRes == "[musica]" || lowerRes == "[blank_audio]" ||
+			lowerRes == "(silencio)" || lowerRes == "[silencio]" || lowerRes == "(music)" || lowerRes == "[gritos]" {
+			return "", nil
+		}
+		return resText, nil
 	}
 
 	// Fallback to python whisper or whisper CLI

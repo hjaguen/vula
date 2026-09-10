@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
@@ -199,19 +200,25 @@ var voiceSpeakCmd = &cobra.Command{
 }
 
 var listenCmd = &cobra.Command{
-	Use:   "listen",
+	Use:   "listen [seconds]",
 	Short: "Start active listening AI assistant (Whisper STT -> Ollama -> Piper TTS)",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, _ := config.LoadConfig()
 		assistant := voice.NewAssistant(cfg)
-		fmt.Printf("%s\n", ui.InfoStyle.Render("⚡ Vula AI Escuchando... (Habla ahora)"))
-		q, ans, err := assistant.ListenAndRespond(context.Background(), 4)
+		duration := 4
+		if len(args) > 0 {
+			if d, err := strconv.Atoi(args[0]); err == nil && d > 0 {
+				duration = d
+			}
+		}
+		fmt.Printf("%s Vula AI Escuchando durante %d segundos... (¡Habla ahora al micrófono!)\n", ui.InfoStyle.Render("⚡"), duration)
+		q, ans, err := assistant.ListenAndRespond(context.Background(), duration)
 		if err != nil {
-			log.Error("Error en escucha activa de IA", "error", err)
+			log.Error("Escucha de voz finalizada", "info", err)
 			os.Exit(1)
 		}
-		fmt.Printf("\n%s %s\n", ui.SubtitleStyle.Render("Pregunta:"), q)
-		fmt.Printf("%s %s\n\n", ui.SuccessStyle.Render("Respuesta:"), ans)
+		fmt.Printf("\n%s %s\n", ui.SubtitleStyle.Render("Voz detectada:"), q)
+		fmt.Printf("%s %s\n\n", ui.SuccessStyle.Render("Respuesta Vula:"), ans)
 	},
 }
 
