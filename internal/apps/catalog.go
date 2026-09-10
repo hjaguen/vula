@@ -12,9 +12,9 @@ import (
 type AppRecipe struct {
 	ID          string
 	Name        string
-	Category    string // CLI, Editor, Browser, Database, Productivity
+	Category    string // CLI, Editor, Browser, Database, Design, DevOps, Media, Productivity
 	Description string
-	InstallType string // apt, curl-sh, flatpak, github-tar
+	InstallType string // apt, curl-sh, snap, flatpak, github-tar
 	PackageName string
 }
 
@@ -29,11 +29,19 @@ var Catalog = []AppRecipe{
 	{ID: "fish", Name: "Fish Shell", Category: "CLI", Description: "Smart and user-friendly command-line shell", InstallType: "apt", PackageName: "fish"},
 	{ID: "tmux", Name: "Tmux", Category: "CLI", Description: "Terminal multiplexer with custom Vula theme", InstallType: "apt", PackageName: "tmux"},
 
-	// Developer GUI Apps
+	// 3D & Design
+	{ID: "blender", Name: "Blender 3D", Category: "Design", Description: "3D creation suite for modeling, rendering, and animation", InstallType: "apt", PackageName: "blender"},
+	{ID: "gimp", Name: "GIMP Editor", Category: "Design", Description: "GNU Image Manipulation Program for photo editing", InstallType: "apt", PackageName: "gimp"},
+	{ID: "inkscape", Name: "Inkscape Vector", Category: "Design", Description: "Professional vector graphics editor for SVG illustration", InstallType: "apt", PackageName: "inkscape"},
+	{ID: "krita", Name: "Krita Studio", Category: "Design", Description: "Digital painting and 2D animation studio", InstallType: "apt", PackageName: "krita"},
+
+	// Developer GUI & Media
 	{ID: "vscode", Name: "Visual Studio Code", Category: "Editor", Description: "Code editing redefined", InstallType: "snap", PackageName: "code --classic"},
 	{ID: "obsidian", Name: "Obsidian", Category: "Productivity", Description: "Knowledge base and markdown notes", InstallType: "snap", PackageName: "obsidian --classic"},
 	{ID: "dbeaver", Name: "DBeaver Community", Category: "Database", Description: "Universal database tool and SQL client", InstallType: "snap", PackageName: "dbeaver-ce"},
 	{ID: "brave", Name: "Brave Browser", Category: "Browser", Description: "Privacy-focused web browser", InstallType: "snap", PackageName: "brave"},
+	{ID: "docker", Name: "Docker Engine", Category: "DevOps", Description: "Container runtime engine and developer platform", InstallType: "apt", PackageName: "docker.io"},
+	{ID: "vlc", Name: "VLC Media Player", Category: "Media", Description: "Cross-platform multimedia player and framework", InstallType: "apt", PackageName: "vlc"},
 }
 
 type Manager struct {
