@@ -194,6 +194,17 @@ func controlSystemSetting(ctx context.Context, setting, value string, cfg *confi
 		}
 		return exec.Command("spectacle").Run()
 
+	case "brightness":
+		val := strings.TrimSuffix(value, "%")
+		if _, err := exec.LookPath("brightnessctl"); err == nil {
+			return exec.Command("brightnessctl", "set", val+"%").Run()
+		}
+		if _, err := exec.LookPath("gdbus"); err == nil {
+			gdbusCmd := fmt.Sprintf("gdbus call --session --dest org.gnome.SettingsDaemon.Power --object-path /org/gnome/SettingsDaemon/Power --method org.freedesktop.DBus.Properties.Set org.gnome.SettingsDaemon.Power.Screen Brightness \"<int32 %s>\"", val)
+			return exec.Command("sh", "-c", gdbusCmd).Run()
+		}
+		return fmt.Errorf("brightness control tool (brightnessctl or gdbus) not found")
+
 	case "night_light":
 		val := "true"
 		if strings.ToLower(value) == "off" || value == "false" {

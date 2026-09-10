@@ -64,10 +64,15 @@ func (c *Client) Ask(ctx context.Context, prompt string, streamHandler func(chun
 
 // AskTask sends a prompt with explicit task classification for complexity offloading
 func (c *Client) AskTask(ctx context.Context, prompt string, taskType string, streamHandler func(chunk string)) (string, error) {
+	return c.AskTaskWithSystemPrompt(ctx, prompt, c.cfg.AI.SystemPrompt, taskType, streamHandler)
+}
+
+// AskTaskWithSystemPrompt sends a prompt with custom system prompt and explicit task classification
+func (c *Client) AskTaskWithSystemPrompt(ctx context.Context, prompt string, customSystemPrompt string, taskType string, streamHandler func(chunk string)) (string, error) {
 	ctx, cancel := context.WithTimeout(ctx, 300*time.Second)
 	defer cancel()
 
-	var systemContent = c.cfg.AI.SystemPrompt
+	var systemContent = customSystemPrompt
 	if c.cfg.AI.ContextEnabled {
 		ctxInfo := CaptureActiveContext()
 		if ctxInfo != "" {
