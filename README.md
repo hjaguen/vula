@@ -2,7 +2,7 @@
 
 > **"Vula"** *(verb, Zulu & Xhosa)*: **To open, to start, to unlock.**
 
-**Vula** is an opinionated, keyboard-first developer operating environment crafted for **Ubuntu 24.04+ LTS (Noble Numbat & future LTS releases like 26.04)**. It combines the rock-solid hardware stability of Ubuntu and GNOME Shell with the elegance of a **100% Go + Charm TUI** orchestrator, native local AI intelligence, conversational real-time voice assistant, unified theming, and modern developer dotfiles.
+**Vula** is an opinionated, keyboard-first developer operating environment crafted for **Ubuntu 24.04+ LTS (Noble Numbat & future LTS releases like 26.04)**. It combines the rock-solid hardware stability of Ubuntu and GNOME Shell with the elegance of a **100% Go + Charm TUI** orchestrator, native local/hybrid AI intelligence, conversational real-time voice assistant, OS action control engine (`vula do`), unified theming, and modern developer dotfiles.
 
 [![CI Pipeline](https://github.com/hjaguen/vula/actions/workflows/ci.yml/badge.svg)](https://github.com/hjaguen/vula/actions/workflows/ci.yml)
 [![Security Scan](https://github.com/hjaguen/vula/actions/workflows/security.yml/badge.svg)](https://github.com/hjaguen/vula/actions/workflows/security.yml)
@@ -29,13 +29,14 @@
 
 While projects like **Omakub** (Ubuntu/GNOME) and **Omarchy** (Arch/Hyprland) paved the way for curated developer workflows, developers running Ubuntu LTS were left without a modern, AI-native environment that retained LTS hardware reliability.
 
-**Vula delivers this through five core pillars:**
+**Vula delivers this through six core pillars:**
 
 1. **Rock-Solid LTS Stability:** Built natively for Ubuntu 24.04+ LTS (Noble Numbat and forward-compatible with 26.04+ LTS) and GNOME Shell 46+. Zero kernel panics, full GPU acceleration support, and production-grade stability.
 2. **100% Go & Charm TUI:** No fragile 5,000-line bash scripts. Vula is powered by a compiled, type-safe Go binary utilizing the [Charm](https://charm.sh) ecosystem (`bubbletea`, `lipgloss`, `huh`, `bubbles`).
-3. **Conversational Local AI & Voice:** Integrated directly into the OS with active desktop context awareness (reads focused window state and clipboard safely) powered by Ollama (`qwen2.5-coder`, `llama3.2`), local Whisper.cpp (STT), and Piper (neural TTS).
-4. **Unified Aesthetics & Theme Studio (`vula theme`):** System-wide theme switcher and interactive palette creator (TUI + Local AI) across GNOME Shell, terminal emulators (Ghostty/Kitty), Neovim, and Starship prompt.
-5. **Turnkey Dotfiles & App Catalog:** One-command installation of modern Unix CLI tools (`eza`, `bat`, `lazygit`, `zoxide`, `btop`, `fzf`) and pre-configured dotfiles (Fish, Starship, Neovim Lua IDE, Tmux).
+3. **OS Control Engine (`vula do`):** Safe, natural language OS control to launch apps, adjust brightness/volume, manage files, and control processes with multi-tier risk classification and TUI confirmation prompts.
+4. **Conversational Local & Hybrid AI & Voice:** Integrated directly into the OS with desktop context awareness (window title & clipboard) powered by Ollama, Cloud AI Providers (Groq, Gemini, OpenAI), Whisper STT, and Piper neural TTS.
+5. **Unified Aesthetics & Theme Studio (`vula theme`):** System-wide theme switcher and interactive palette creator (TUI + Local AI) across GNOME Shell, terminal emulators (Ghostty/Kitty), Neovim, and Starship prompt.
+6. **Turnkey Dotfiles & App Catalog:** One-command installation of modern Unix CLI tools (`eza`, `bat`, `lazygit`, `zoxide`, `btop`, `fzf`) and pre-configured dotfiles (Fish, Starship, Neovim Lua IDE, Tmux).
 
 ---
 
@@ -45,7 +46,8 @@ While projects like **Omakub** (Ubuntu/GNOME) and **Omarchy** (Arch/Hyprland) pa
 vula/
 ├── cmd/vula/              # Cobra CLI Entrypoint & Subcommands
 ├── internal/
-│   ├── ai/                # Context-Aware Ollama Client & Shell Translator
+│   ├── actions/           # OS Actions Engine, Risk Guardrails & Audit Logger (vula do)
+│   ├── ai/                # Context-Aware Hybrid AI Engine (Ollama, Gemini, Groq, OpenAI)
 │   ├── apps/              # Curated Developer CLI & GUI Apps Catalog
 │   ├── config/            # Declarative YAML Config (~/.config/vula/config.yaml)
 │   ├── doctor/            # Self-Healing System Diagnostic Engine
@@ -108,17 +110,12 @@ Checking system readiness, desktop environment, and AI stack
 
 ◆ AI Subsystem
   [  OK  ] Ollama Local Daemon      Connected to Ollama at http://localhost:11434
+  [  OK  ] Cloud AI Key Validation  Active Cloud AI provider configured and verified
 
 ◆ Voice Subsystem
-  [  OK  ] Microphone Capture       ALSA/PipeWire audio capture utility available
+  [  OK  ] Microphone Capture       ALSA/PipeWire audio capture utility available (@DEFAULT_SOURCE@)
 
-Diagnostic Summary: 12 Passed | 0 Failures
-```
-
-### 4. TUI System Information Card (`vula fetch`)
-Display a high-impact system summary with active AI models, desktop session info, theme palette, and color blocks:
-```bash
-vula fetch
+Diagnostic Summary: 13 Passed | 0 Failures
 ```
 
 ---
@@ -127,8 +124,8 @@ vula fetch
 
 | Shortcut | Action | Description |
 | :--- | :--- | :--- |
-| **`Super + Space`** | **Vula Floating HUD** | Raycast-style launcher, action palette, and AI assistant |
-| **`Super + Alt + A`** | **Active Voice AI** | Conversational assistant: speak your question, receive spoken answer + desktop notification |
+| **`Super + Space`** | **Vula Floating HUD** | Raycast-style launcher, action palette, OS control (`do`), and AI assistant |
+| **`Super + Alt + A`** | **Active Voice AI & OS Control** | Conversational assistant: speak questions or OS commands, receive spoken response |
 | **`Super + Alt + V`** | **Voice Dictation** | Transcribe spoken words directly into the active editor or input field |
 | **`Super + Alt + C`** | **AI Selection Explain** | Analyze & refactor active selection/clipboard with local AI & desktop notification |
 | **`Super + Left / Right / Up / Down`** | **Half-Screen Snap** | Snap window to left, right, top, or bottom screen half |
@@ -143,88 +140,116 @@ vula fetch
 
 ---
 
-## 🎙️ Active Voice AI & Dictation
+## ⚡ Vula OS Actions Engine (`vula do`)
 
-### 1. Active Conversational Voice Assistant
+Control your desktop environment natively with natural language instructions:
+
+```bash
+# Adjust screen brightness and audio volume:
+vula do "ajusta el brillo al 40%"
+vula do "pon el volumen al 70%"
+
+# Launch developer applications:
+vula do "abre VS Code"
+vula do "abre Obsidian y el navegador"
+
+# Manage files & directories securely:
+vula do "mueve ~/Descargas/reporte.pdf a ~/Documentos/"
+
+# Change visual themes & desktop settings:
+vula do "cambia al tema tokyonight"
+vula do "activa la luz nocturna"
+
+# Inspect audit logs of all executed actions:
+vula actions history
+```
+
+### 🛡️ Multi-Tier Risk Guardrails & Safety
+* **`SAFE` (Auto-execute):** Launching apps, searching, adjusting brightness, volume, and theme.
+* **`SENSITIVE` (TUI Confirmation):** Moving/copying files, creating directories, and terminating processes (`pkill`). Displays an interactive Charm `huh` prompt before proceeding.
+* **`HIGH` (Strict Confirmation & Path Restriction):** File deletions (`rm`), shutdown, reboot, or operations targeting system root directories (`/`, `/boot`, `/etc`, `/usr`, etc.).
+
+---
+
+## 🖥️ Floating HUD Overlay (`Super + Space`)
+
+The Vula HUD (`Super + Space`) is an interactive floating launcher with dynamic mode badges:
+
+* **Tab Navigation:** Press **`Tab`** to cycle between modes: `[COMANDOS]`, `[⚡ ACCIÓN OS]`, `[🤖 IA CHAT]`, `[🎙 VOZ]`, and `[🎨 TEMA]`.
+* **Direct OS Control:** Type `do [instruction]` directly in the HUD input line or select **`⚡ Execute OS Action (do)`** from the menu.
+* **Instant Mode Switching:** Type `do ...` for OS control or `?...` for general AI chat.
+
+---
+
+## 🎙️ Active Voice AI & Audio Subsystem
+
+### 1. Active Conversational Voice & OS Control Assistant
 Press **`Super + Alt + A`** or run:
 ```bash
-vula listen
+vula listen          # Default 4 seconds
+vula listen 6        # Listen for 6 seconds
 ```
-* **Audio Capture:** Records your voice cleanly through PipeWire.
-* **STT:** Transcribes speech locally via Whisper AVX2 in Spanish/English.
-* **Contextual AI:** Queries the local LLM with active window and clipboard context.
-* **Dual Output:** Speaks the answer back through your speakers with **Piper TTS** in <0.8s and displays a desktop notification.
+* **Audio Capture:** PipeWire `@DEFAULT_SOURCE@` native recording.
+* **STT:** Transcribes speech locally via Whisper.cpp in Spanish/English (with silence hallucination filtering).
+* **OS Actions Integration:** Speaks commands directly (*"Vula, ajusta el brillo al 40%"* or *"Abre VS Code"*) to execute system actions hands-free.
+* **Dual Output:** Speaks answers back through your speakers via **Piper TTS** (<0.8s) and displays a desktop notification.
 
-### 2. Hands-Free Voice Listener Daemon
-Run a continuous background voice listener:
+### 2. Microphone Diagnostic Test
+Test live microphone input signal levels (in dB):
 ```bash
-vula voice daemon
+vula voice test
 ```
 
-### 3. Direct Voice Dictation into Any App
+### 3. Voice Dictation into Any App
 Press **`Super + Alt + V`** or run:
 ```bash
 vula voice record
 ```
 
-### 4. Neural Speech Synthesis
-```bash
-vula voice speak "Hola Mauricio, el motor de voz de Vula está listo y operativo."
-```
-
 ---
 
-## 🤖 Local AI & Shell Commands
+## 🤖 Hybrid AI Engine & Cloud Offloading
 
-### 1. Smart Git Commit Generator (`vula ai commit`)
-Analyze `git diff` and generate conventional commit messages:
+Vula features a hybrid AI engine combining local Ollama models with Cloud AI providers:
+
+### 1. Configure Cloud Providers with Live Key Validation
+Configure API keys with instant HTTP live validation checks:
 ```bash
+# Configure Groq:
+vula ai config --key=groq:gsk_YOUR_KEY
+
+# Configure Google Gemini:
+vula ai config --key=gemini:YOUR_KEY --cloud-model=gemini-2.0-flash
+
+# Set hybrid mode and cloud token threshold:
+vula ai config --mode=hybrid --threshold=1200
+```
+
+### 2. Live AI Status & Diagnostics
+```bash
+vula ai status
+```
+
+### 3. Developer Workflow Commands
+```bash
+# Smart Git Commit Generator:
 vula ai commit
-# Or alias:
-vula git commit
-```
 
-### 2. Terminal Error Diagnoser (`vula ai fix`)
-Diagnose recent command failures and receive exact fix commands:
-```bash
+# Terminal Error Diagnoser:
 vula ai fix "command not found: zoxide"
-# Or pipe error output:
-make 2>&1 | vula ai fix
-```
 
-### 3. Selection & Clipboard AI Explain (`Super + Alt + C`)
-Press **`Super + Alt + C`** or run:
-```bash
+# Selection & Clipboard AI Explain (Super + Alt + C):
 vula ai explain
-```
 
-### 4. Ask AI with Desktop Context
-```bash
+# Ask AI with Desktop Context:
 vula ai ask "How do I optimize this SQL query in my clipboard?"
-```
-
-### Natural Language Shell Translator
-```bash
-# Translate intent directly to a safe, executable bash command:
-vula ai cmd "find all files larger than 100MB modified in the last 7 days"
-```
-
-### List Installed Local Models
-```bash
-vula ai models
 ```
 
 ---
 
 ## 🎨 Global Theme Engine & Theme Studio (`vula theme`)
 
-### 1. Interactive Theme Selector in Vula HUD (`Super + Space`)
-Switch system-wide themes visually directly from the floating HUD launcher:
-* Press **`Super + Space`** and select **`Switch System Theme`** (or press **`Tab`** to cycle to the **`THEME`** mode).
-* Scroll through available themes with **`Up/Down`** arrow keys to see live accent color blocks, background hex values, and active theme indicators.
-* Press **`Enter`** to instantly apply your chosen theme across GNOME Shell, GTK accent colors, and terminal emulators.
-
-### 2. Switch Existing Themes via CLI
+### 1. Switch Themes via HUD (`Super + Space`) or CLI
 ```bash
 # List available palettes:
 vula theme list
@@ -236,107 +261,57 @@ vula theme set nord          # Nord Arctic
 vula theme set rose-pine     # Rosé Pine
 ```
 
-### 3. Generate Themes with Local AI
+### 2. Generate Themes with Local AI
 ```bash
-# Generate a complete palette from natural language:
 vula theme generate "cyberpunk neon obsidian with emerald and violet accents"
-```
-
-### 4. Interactive TUI Theme Creator
-```bash
-# Launch the Charm Huh form with live terminal preview:
-vula theme create
-```
-
-### 5. Preview Any Theme
-```bash
-vula theme preview tokyonight
 ```
 
 ---
 
-## 🖼 HD Wallpaper Engine & Rotator (`vula wallpaper`)
-
-Manage, download, and dynamically rotate high-definition aesthetic wallpapers tailored to your active Vula theme palette:
+## 🖼 HD Wallpaper Engine (`vula wallpaper`)
 
 ```bash
-# Rotate to the next wallpaper in collection:
-vula wallpaper next
-
-# Set a specific wallpaper file:
-vula wallpaper set catppuccin.svg
-
-# List all local wallpapers in ~/.config/vula/wallpapers/:
-vula wallpaper list
-
-# Download curated 4K theme wallpapers:
-vula wallpaper fetch
+vula wallpaper next          # Rotate wallpaper
+vula wallpaper fetch         # Download 4K aesthetic wallpapers
 ```
 
 ---
 
 ## 🪟 Tiling Manager & Extensions (`vula desktop`)
 
-### 1. Configure Tiling Assistant & Gaps
 ```bash
-vula desktop tiling
-```
-* Sets 6px window gaps and screen edge padding.
-* Highlights the active window with a 2px border in your active theme's accent color.
-* Configures half-screen and quarter-screen snapping shortcuts.
-
-### 2. Curated GNOME Extensions Suite
-```bash
-# List curated extensions:
-vula desktop extensions list
-
-# Download, install, and enable Blur my Shell & Just Perfection:
-vula desktop extensions install-curated
+vula desktop tiling          # Configure 6px gaps, active border, & snapping
+vula desktop extensions install-curated   # Blur my Shell & Just Perfection
 ```
 
 ---
 
 ## 📁 Developer Dotfiles (`vula dotfiles`)
 
-Deploy opinionated, battle-tested configurations with automatic backups into `~/.config/vula/backups/`:
-
 ```bash
 vula dotfiles install
 ```
-
-* **Fish Shell (`~/.config/fish/config.fish`):** Preloaded with modern aliases (`ls -> eza`, `cat -> bat`, `lg -> lazygit`, `ask -> vula ai ask`, `vcmd -> vula ai cmd`).
-* **Starship Prompt (`~/.config/starship.toml`):** Minimalist two-line prompt with Git status, execution time, and Node/Go/Rust toolchains.
-* **Neovim (`~/.config/nvim/init.lua`):** Modern Lua configuration with relative line numbers, system clipboard sharing, and Vim window navigation.
-* **Tmux (`~/.tmux.conf`):** `Ctrl+A` prefix, mouse scrolling, and Vula status bar.
+* **Fish Shell (`~/.config/fish/config.fish`):** Aliases (`ls -> eza`, `cat -> bat`, `lg -> lazygit`, `ask -> vula ai ask`, `do -> vula do`).
+* **Starship Prompt (`~/.config/starship.toml`)**
+* **Neovim Lua IDE (`~/.config/nvim/init.lua`)**
+* **Tmux (`~/.tmux.conf`)**
 
 ---
 
-## 📦 Developer App Store & Catalog (`vula apps`)
+## 📦 Developer App Store (`vula apps`)
 
-### 1. Interactive TUI App Store (`vula apps ui`)
-Launch a visual Charm `huh` multi-select store that pre-detects installed tools and lets you pick software recipes to install or update:
 ```bash
-vula apps ui
-# Or alias:
-vula apps store
-```
-
-### 2. Install CLI Stack & List Catalog
-```bash
-# List curated developer software:
-vula apps list
-
-# Install complete modern CLI stack (eza, bat, lazygit, starship, zoxide, btop, fzf):
-vula apps install-cli
+vula apps ui                 # Visual Charm Huh App Store
+vula apps install-cli        # Install CLI stack (eza, bat, lazygit, starship, zoxide, btop, fzf)
 ```
 
 ---
 
 ## 🛡 Security Guarantees
 
-* **Zero Root Daemons:** AI and Voice engines run strictly in user space (`$USER`).
-* **Human-in-the-Loop:** Destructive commands (`rm`, `sudo`, `dd`) always require explicit user confirmation.
-* **Supply-Chain Verification:** All downloaded binaries and neural models are verified against cryptographic SHA-256 checksums.
+* **Zero Root Daemons:** AI, Voice, and OS action engines run strictly in user space (`$USER`).
+* **Human-in-the-Loop:** Sensitive & High-risk OS actions (`rm`, file moves, process termination, shutdown) require explicit TUI user confirmation.
+* **System Boundaries:** Path sanitization prevents accidental modification of critical system root directories (`/`, `/boot`, `/etc`, `/usr`).
 * **Local-First Privacy:** Prompts and audio streams never leave your device unless you explicitly configure an external API provider.
 
 ---
@@ -347,6 +322,7 @@ vula apps install-cli
 - [x] **v0.2.0-alpha:** Conversational Active Voice AI (`vula listen`), `Super + Alt + A` global shortcut, System notification integration.
 - [x] **v0.3.0-alpha:** Global Theme Engine (`tokyonight`, `catppuccin`, `nord`, `rose-pine`), Dotfiles manager (Fish, Starship, Neovim, Tmux), Developer CLI app catalog.
 - [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio, AI Palette Generator & HUD Theme Selector.
+- [x] **v0.5.0-alpha:** Vula OS Actions Engine (`vula do`), Multi-tier risk guardrails & audit logging, Hybrid AI Engine (Groq, Gemini, OpenAI) with Live Key Validation, PipeWire `@DEFAULT_SOURCE@` microphone diagnostics (`vula voice test`), and HUD Tab mode cycling.
 - [ ] **v1.0.0:** Production Release, `.deb` packaging, PPA & Sigstore release signing.
 
 ---
