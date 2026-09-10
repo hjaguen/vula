@@ -40,7 +40,7 @@ var Catalog = []AppRecipe{
 	{ID: "obsidian", Name: "Obsidian", Category: "Productivity", Description: "Knowledge base and markdown notes", InstallType: "snap", PackageName: "obsidian --classic"},
 	{ID: "dbeaver", Name: "DBeaver Community", Category: "Database", Description: "Universal database tool and SQL client", InstallType: "snap", PackageName: "dbeaver-ce"},
 	{ID: "brave", Name: "Brave Browser", Category: "Browser", Description: "Privacy-focused web browser", InstallType: "snap", PackageName: "brave"},
-	{ID: "docker", Name: "Docker Engine", Category: "DevOps", Description: "Container runtime engine and developer platform", InstallType: "apt", PackageName: "docker.io"},
+	{ID: "docker", Name: "Docker Engine", Category: "DevOps", Description: "Container runtime engine and developer platform", InstallType: "apt", PackageName: "docker-ce"},
 	{ID: "vlc", Name: "VLC Media Player", Category: "Media", Description: "Cross-platform multimedia player and framework", InstallType: "apt", PackageName: "vlc"},
 }
 

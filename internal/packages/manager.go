@@ -39,13 +39,6 @@ func (m *Manager) InstallAptPackages(packages []string) error {
 		return nil // Idempotent: already installed
 	}
 
-	// Purge residual package configs (rc status) that conflict with containerd.io/docker
-	purgeCmd := exec.Command("sudo", "dpkg", "--purge", "containerd", "docker.io")
-	purgeCmd.Stdin = os.Stdin
-	purgeCmd.Stdout = os.Stdout
-	purgeCmd.Stderr = os.Stderr
-	_ = purgeCmd.Run()
-
 	args := append([]string{"apt-get", "install", "-y", "--no-install-recommends"}, missing...)
 	cmd := exec.Command("sudo", args...)
 	cmd.Stdin = os.Stdin
