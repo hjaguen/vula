@@ -659,13 +659,145 @@ var keysSetCmd = &cobra.Command{
 	},
 }
 
+var aiStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Show AI provider health, current mode (hybrid/local/cloud), and active models",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		client := ai.NewClient(cfg)
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		localModels, err := client.ListLocalModels(ctx)
+		localOk := err == nil
+
+		fmt.Println(ui.RenderHeader("Vula AI Provider Status", "Hybrid AI Engine Diagnostic"))
+		fmt.Printf("  • Execution Mode:        %s\n", ui.InfoStyle.Render(cfg.AI.Mode))
+		fmt.Printf("  • Heavy Token Threshold: %d tokens\n\n", cfg.AI.HeavyTokenThreshold)
+
+		fmt.Println(ui.SubtitleStyle.Render("Local AI (Ollama):"))
+		fmt.Printf("  • Host:                 %s\n", cfg.AI.OllamaHost)
+		fmt.Printf("  • Default Model:        %s\n", cfg.AI.DefaultModel)
+		if localOk {
+			fmt.Printf("  • Status:               %s (%d local models installed)\n", ui.SuccessStyle.Render("✓ Online"), len(localModels))
+		} else {
+			fmt.Printf("  • Status:               %s (Ollama not running or unreachable)\n", ui.ErrorStyle.Render("✗ Offline"))
+		}
+
+		fmt.Println("\n" + ui.SubtitleStyle.Render("Cloud AI Provider:"))
+		fmt.Printf("  • Active Provider:      %s\n", cfg.AI.CloudProvider)
+		fmt.Printf("  • Cloud Model:          %s\n", cfg.AI.CloudModel)
+
+		keyName := cfg.AI.CloudProvider
+		keyVal := cfg.AI.APIKeys[keyName]
+		if keyVal == "" {
+			switch keyName {
+			case "gemini":
+				keyVal = os.Getenv("GEMINI_API_KEY")
+			case "groq":
+				keyVal = os.Getenv("GROQ_API_KEY")
+			case "openai":
+				keyVal = os.Getenv("OPENAI_API_KEY")
+			}
+		}
+
+		if keyVal != "" {
+			masked := keyVal
+			if len(keyVal) > 8 {
+				masked = keyVal[:4] + "..." + keyVal[len(keyVal)-4:]
+			}
+			fmt.Printf("  • API Key:              %s (%s)\n", ui.SuccessStyle.Render("✓ Configured"), masked)
+		} else {
+			fmt.Printf("  • API Key:              %s (Set with 'vula ai config --key=%s:YOUR_KEY')\n", ui.WarnStyle.Render("⚠️ Missing"), keyName)
+		}
+		fmt.Println()
+	},
+}
+
+var (
+	cfgMode       string
+	cfgProvider   string
+	cfgKey        string
+	cfgModel      string
+	cfgCloudModel string
+	cfgThreshold  int
+)
+
+var aiConfigCmd = &cobra.Command{
+	Use:   "config",
+	Short: "Configure AI execution mode, cloud providers, API keys, and models",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		updated := false
+
+		if cfgMode != "" {
+			cfg.AI.Mode = cfgMode
+			updated = true
+		}
+		if cfgProvider != "" {
+			cfg.AI.CloudProvider = cfgProvider
+			updated = true
+		}
+		if cfgModel != "" {
+			cfg.AI.DefaultModel = cfgModel
+			updated = true
+		}
+		if cfgCloudModel != "" {
+			cfg.AI.CloudModel = cfgCloudModel
+			updated = true
+		}
+		if cfgThreshold > 0 {
+			cfg.AI.HeavyTokenThreshold = cfgThreshold
+			updated = true
+		}
+		if cfgKey != "" {
+			parts := strings.SplitN(cfgKey, ":", 2)
+			if len(parts) == 2 {
+				if cfg.AI.APIKeys == nil {
+					cfg.AI.APIKeys = make(map[string]string)
+				}
+				cfg.AI.APIKeys[parts[0]] = parts[1]
+				updated = true
+			} else {
+				log.Error("Invalid key format. Use --key=provider:API_KEY (e.g. --key=gemini:AIzaSy...)")
+				os.Exit(1)
+			}
+		}
+
+		if !updated {
+			fmt.Println(ui.WarnStyle.Render("No configuration flags passed."))
+			fmt.Println("Usage examples:")
+			fmt.Println("  vula ai config --mode=hybrid --provider=gemini")
+			fmt.Println("  vula ai config --key=gemini:AIzaSyYourGeminiKeyHere")
+			fmt.Println("  vula ai config --cloud-model=gemini-2.0-flash")
+			return
+		}
+
+		if err := config.SaveConfig(cfg); err != nil {
+			log.Error("Failed to save config", "error", err)
+			os.Exit(1)
+		}
+
+		fmt.Println(ui.SuccessStyle.Render("✓ Vula AI configuration updated and saved successfully!"))
+	},
+}
+
 func init() {
+	aiConfigCmd.Flags().StringVar(&cfgMode, "mode", "", "AI mode: hybrid, local, cloud")
+	aiConfigCmd.Flags().StringVar(&cfgProvider, "provider", "", "Cloud provider: gemini, groq, ollama-cloud, openai")
+	aiConfigCmd.Flags().StringVar(&cfgKey, "key", "", "API key in format provider:KEY (e.g. gemini:YOUR_KEY)")
+	aiConfigCmd.Flags().StringVar(&cfgModel, "model", "", "Default local model (e.g. qwen2.5-coder:1.5b)")
+	aiConfigCmd.Flags().StringVar(&cfgCloudModel, "cloud-model", "", "Default cloud model (e.g. gemini-2.0-flash)")
+	aiConfigCmd.Flags().IntVar(&cfgThreshold, "threshold", 0, "Heavy token threshold for cloud offloading (e.g. 1200)")
+
 	aiCmd.AddCommand(aiAskCmd)
 	aiCmd.AddCommand(aiCmdSuggest)
 	aiCmd.AddCommand(aiModelsCmd)
 	aiCmd.AddCommand(aiCommitCmd)
 	aiCmd.AddCommand(aiFixCmd)
 	aiCmd.AddCommand(aiExplainCmd)
+	aiCmd.AddCommand(aiStatusCmd)
+	aiCmd.AddCommand(aiConfigCmd)
 
 	voiceCmd.AddCommand(voiceRecordCmd)
 	voiceCmd.AddCommand(voiceSpeakCmd)

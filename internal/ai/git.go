@@ -37,7 +37,7 @@ func GenerateCommitMessage(ctx context.Context, cfg *config.Config) (string, err
 		diff,
 	)
 
-	resp, err := client.Ask(ctx, prompt, nil)
+	resp, err := client.AskTask(ctx, prompt, "git_commit", nil)
 	if err != nil {
 		return "", fmt.Errorf("AI model query failed: %w", err)
 	}

@@ -27,15 +27,20 @@ type ThemeConfig struct {
 }
 
 type AIConfig struct {
-	DefaultProvider string                 `yaml:"default_provider"` // ollama, gemini, openai, anthropic
-	OllamaHost      string                 `yaml:"ollama_host"`      // http://localhost:11434
-	DefaultModel    string                 `yaml:"default_model"`    // qwen2.5:1.5b, qwen2.5-coder:1.5b, llama3.2
-	NumThreads      int                    `yaml:"num_threads"`      // CPU inference threads (e.g. 4)
-	ContextLength   int                    `yaml:"context_length"`   // Context window tokens (e.g. 4096)
-	ContextEnabled  bool                   `yaml:"context_enabled"`  // captures active window & clipboard
-	Streaming       bool                   `yaml:"streaming"`
-	SystemPrompt    string                 `yaml:"system_prompt"`
-	APIKeys         map[string]string      `yaml:"api_keys,omitempty"`
+	Mode                string            `yaml:"mode"`                 // local, cloud, hybrid
+	DefaultProvider     string            `yaml:"default_provider"`     // ollama
+	CloudProvider       string            `yaml:"cloud_provider"`       // gemini, groq, ollama-cloud, openai
+	OllamaHost          string            `yaml:"ollama_host"`          // http://localhost:11434
+	CloudHost           string            `yaml:"cloud_host,omitempty"` // custom remote endpoint
+	DefaultModel        string            `yaml:"default_model"`        // qwen2.5-coder:1.5b
+	CloudModel          string            `yaml:"cloud_model"`          // gemini-2.0-flash, llama-3.3-70b-versatile
+	HeavyTokenThreshold int               `yaml:"heavy_token_threshold"`// token/character threshold to offload heavy tasks
+	NumThreads          int               `yaml:"num_threads"`          // CPU inference threads (e.g. 4)
+	ContextLength       int               `yaml:"context_length"`       // Context window tokens (e.g. 4096)
+	ContextEnabled      bool              `yaml:"context_enabled"`      // captures active window & clipboard
+	Streaming           bool              `yaml:"streaming"`
+	SystemPrompt        string            `yaml:"system_prompt"`
+	APIKeys             map[string]string `yaml:"api_keys,omitempty"`
 }
 
 type VoiceConfig struct {
@@ -84,15 +89,19 @@ func DefaultConfig() *Config {
 			AccentColor: "#7C3AED",
 		},
 		AI: AIConfig{
-			DefaultProvider: "ollama",
-			OllamaHost:      "http://localhost:11434",
-			DefaultModel:    "qwen2.5-coder:1.5b",
-			NumThreads:      4,
-			ContextLength:   4096,
-			ContextEnabled:  true,
-			Streaming:       true,
-			SystemPrompt:    "You are Vula, an intelligent, concise and hyper-competent developer OS assistant integrated into Ubuntu. Help with code, terminal commands, and system operations safely.",
-			APIKeys:         make(map[string]string),
+			Mode:                "hybrid",
+			DefaultProvider:     "ollama",
+			CloudProvider:       "gemini",
+			OllamaHost:          "http://localhost:11434",
+			DefaultModel:        "qwen2.5-coder:1.5b",
+			CloudModel:          "gemini-2.0-flash",
+			HeavyTokenThreshold: 1200,
+			NumThreads:          4,
+			ContextLength:       4096,
+			ContextEnabled:      true,
+			Streaming:           true,
+			SystemPrompt:        "You are Vula, an intelligent, concise and hyper-competent developer OS assistant integrated into Ubuntu. Help with code, terminal commands, and system operations safely.",
+			APIKeys:             make(map[string]string),
 		},
 		Voice: VoiceConfig{
 			Enabled:         true,

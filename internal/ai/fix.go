@@ -45,7 +45,7 @@ func DiagnoseTerminalError(ctx context.Context, cfg *config.Config, input string
 		errorText,
 	)
 
-	resp, err := client.Ask(ctx, prompt, nil)
+	resp, err := client.AskTask(ctx, prompt, "diagnose_error", nil)
 	if err != nil {
 		return "", fmt.Errorf("AI diagnosis failed: %w", err)
 	}

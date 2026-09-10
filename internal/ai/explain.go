@@ -25,7 +25,7 @@ func ExplainSelection(ctx context.Context, cfg *config.Config) (string, error) {
 		ctxInfo,
 	)
 
-	resp, err := client.Ask(ctx, prompt, nil)
+	resp, err := client.AskTask(ctx, prompt, "explain_selection", nil)
 	if err != nil {
 		_ = exec.Command("notify-send", "-a", "Vula AI", "Error Vula AI", err.Error()).Start()
 		return "", fmt.Errorf("AI explanation failed: %w", err)

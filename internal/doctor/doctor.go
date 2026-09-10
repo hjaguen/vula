@@ -331,7 +331,7 @@ func checkAptMirror(r *Report) {
 }
 
 func checkAI(r *Report, cfg *config.Config) {
-	// Check Ollama service
+	// 1. Check Ollama local service
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
@@ -353,12 +353,51 @@ func checkAI(r *Report, cfg *config.Config) {
 			Message:  fmt.Sprintf("Connected to Ollama at %s", host),
 		})
 	} else {
+		status := StatusWarn
+		if cfg.AI.Mode == "local" {
+			status = StatusFail
+		}
 		r.Results = append(r.Results, CheckResult{
 			Category: "AI Subsystem",
 			Name:     "Ollama Local Daemon",
-			Status:   StatusWarn,
+			Status:   status,
 			Message:  fmt.Sprintf("Cannot reach Ollama at %s", host),
-			Hint:     "Install & run Ollama with 'vula ai setup' or visit https://ollama.ai",
+			Hint:     "Install & run Ollama with 'ollama serve' or visit https://ollama.ai",
+		})
+	}
+
+	// 2. Check Cloud AI Provider Configuration
+	keyName := cfg.AI.CloudProvider
+	keyVal := cfg.AI.APIKeys[keyName]
+	if keyVal == "" {
+		switch keyName {
+		case "gemini":
+			keyVal = os.Getenv("GEMINI_API_KEY")
+		case "groq":
+			keyVal = os.Getenv("GROQ_API_KEY")
+		case "openai":
+			keyVal = os.Getenv("OPENAI_API_KEY")
+		}
+	}
+
+	if keyVal != "" || cfg.AI.CloudHost != "" {
+		r.Results = append(r.Results, CheckResult{
+			Category: "AI Subsystem",
+			Name:     "Cloud AI Provider",
+			Status:   StatusOK,
+			Message:  fmt.Sprintf("Active provider: %s (Mode: %s, Model: %s)", cfg.AI.CloudProvider, cfg.AI.Mode, cfg.AI.CloudModel),
+		})
+	} else {
+		status := StatusWarn
+		if cfg.AI.Mode == "cloud" {
+			status = StatusFail
+		}
+		r.Results = append(r.Results, CheckResult{
+			Category: "AI Subsystem",
+			Name:     "Cloud AI Provider",
+			Status:   status,
+			Message:  fmt.Sprintf("No API Key configured for %s (Mode: %s)", cfg.AI.CloudProvider, cfg.AI.Mode),
+			Hint:     fmt.Sprintf("Set API key with 'vula ai config --key=%s:YOUR_KEY' or export %s_API_KEY", keyName, strings.ToUpper(keyName)),
 		})
 	}
 }
