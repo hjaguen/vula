@@ -14,6 +14,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/vula-os/vula/internal/actions"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
@@ -32,6 +33,7 @@ const (
 	ModeVoice
 	ModeConfig
 	ModeTheme
+	ModeDo
 )
 
 type ActionItem struct {
@@ -93,6 +95,7 @@ func InitialModel(cfg *config.Config) Model {
 	themesList := themeMgr.ListThemes()
 
 	allActions := []ActionItem{
+		{Title: "Execute OS Action (do)", Icon: "⚡", Category: "Actions", Command: "os_action"},
 		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Voice Listen AI", Icon: "🎧", Category: "Voice", Command: "voice_listen"},
 		{Title: "App Store TUI", Icon: "📦", Category: "Apps", Command: "apps_store"},
@@ -228,6 +231,31 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				}
 			}
 
+			if strings.HasPrefix(strings.ToLower(val), "do ") || m.mode == ModeDo {
+				query := strings.TrimPrefix(val, "do ")
+				query = strings.TrimPrefix(query, "DO ")
+				query = strings.TrimSpace(query)
+				if query == "" {
+					return m, nil
+				}
+				m.loading = true
+				m.mode = ModeAI
+				m.aiResponse.Reset()
+				m.statusMsg = "Executing OS action..."
+
+				return m, func() tea.Msg {
+					ctx := context.Background()
+					plan, err := actions.ParseIntent(ctx, m.aiClient, query)
+					if err != nil {
+						return aiDoneMsg{err: err}
+					}
+					if err := actions.ExecutePlan(ctx, plan, m.cfg); err != nil {
+						return aiDoneMsg{err: err}
+					}
+					return aiChunkMsg(fmt.Sprintf("✓ OS Action Executed:\n\nInstrucción: %s\nResumen: %s", plan.OriginalPrompt, plan.Summary))
+				}
+			}
+
 			if strings.HasPrefix(val, "?") || m.mode == ModeAI {
 				query := strings.TrimPrefix(val, "?")
 				query = strings.TrimSpace(query)
@@ -326,6 +354,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 	switch action.Command {
+	case "os_action":
+		m.mode = ModeDo
+		m.input.SetValue("")
+		m.input.Placeholder = "Enter OS action (e.g., 'ajusta el brillo al 40%')..."
+		return *m, nil
+
 	case "apps_store":
 		home := os.Getenv("HOME")
 		vulaBin := filepath.Join(home, ".local", "bin", "vula")

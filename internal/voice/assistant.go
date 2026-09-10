@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vula-os/vula/internal/actions"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
 )
@@ -27,7 +28,7 @@ func NewAssistant(cfg *config.Config) *Assistant {
 	}
 }
 
-// ListenAndRespond triggers active speech capture, queries local AI, and speaks back the answer
+// ListenAndRespond triggers active speech capture, queries local AI or OS Actions, and speaks back the answer
 func (a *Assistant) ListenAndRespond(ctx context.Context, durationSec int) (string, string, error) {
 	if durationSec <= 0 {
 		durationSec = 4
@@ -60,9 +61,42 @@ func (a *Assistant) ListenAndRespond(ctx context.Context, durationSec int) (stri
 	}
 
 	// Send visual notification that AI is computing response
-	_ = exec.Command("notify-send", "-a", "Vula AI", fmt.Sprintf("🎙 \"%s\"", transcription), "Procesando con IA local...").Start()
+	_ = exec.Command("notify-send", "-a", "Vula AI", fmt.Sprintf("🎙 \"%s\"", transcription), "Procesando intención...").Start()
 
-	// 3. Query local AI model with desktop context
+	// 3. Check if transcription is an OS action request
+	lowerText := strings.ToLower(transcription)
+	isActionCandidate := strings.HasPrefix(lowerText, "vula do") ||
+		strings.HasPrefix(lowerText, "haz ") ||
+		strings.HasPrefix(lowerText, "hazme ") ||
+		strings.Contains(lowerText, "brillo") ||
+		strings.Contains(lowerText, "volumen") ||
+		strings.Contains(lowerText, "abre ") ||
+		strings.Contains(lowerText, "cierra ") ||
+		strings.Contains(lowerText, "bloquea") ||
+		strings.Contains(lowerText, "mueve ")
+
+	if isActionCandidate {
+		actionText := strings.TrimPrefix(transcription, "vula do")
+		actionText = strings.TrimPrefix(actionText, "vula")
+		actionText = strings.TrimSpace(actionText)
+		if actionText == "" {
+			actionText = transcription
+		}
+
+		plan, planErr := actions.ParseIntent(ctx, a.aiClient, actionText)
+		if planErr == nil && plan != nil && len(plan.Actions) > 0 {
+			_ = exec.Command("notify-send", "-a", "Vula OS Control", "-i", "dialog-information", fmt.Sprintf("⚡ Acción: %s", plan.Summary), "Ejecutando acción del sistema...").Start()
+			execErr := actions.ExecutePlan(ctx, plan, a.cfg)
+			if execErr == nil {
+				respMsg := fmt.Sprintf("Listo, he ejecutado la acción: %s", plan.Summary)
+				_ = exec.Command("notify-send", "-a", "Vula OS Control", "-i", "dialog-information", "✓ Acción Ejecutada", respMsg).Start()
+				_ = a.voiceEngine.Speak(ctx, respMsg)
+				return transcription, respMsg, nil
+			}
+		}
+	}
+
+	// 4. Query local AI model with desktop context for general questions
 	aiPrompt := fmt.Sprintf("El usuario te dice o pregunta por voz: \"%s\". Responde de manera conversacional, muy concisa, precisa y amigable en 1 o 2 oraciones en español.", transcription)
 	aiResponse, err := a.aiClient.Ask(ctx, aiPrompt, nil)
 	if err != nil {
@@ -74,7 +108,7 @@ func (a *Assistant) ListenAndRespond(ctx context.Context, durationSec int) (stri
 	// Send visual notification with the full generated answer
 	_ = exec.Command("notify-send", "-a", "Vula AI", "-i", "dialog-information", fmt.Sprintf("⚡ Vula: %s", transcription), aiResponse).Start()
 
-	// 4. Speak response back through speakers with Piper
+	// 5. Speak response back through speakers with Piper
 	_ = a.voiceEngine.Speak(ctx, aiResponse)
 
 	return transcription, aiResponse, nil
