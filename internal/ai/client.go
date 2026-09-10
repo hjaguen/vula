@@ -78,6 +78,11 @@ func (c *Client) AskTask(ctx context.Context, prompt string, taskType string, st
 	return c.hybridProvider.AskWithTaskType(ctx, prompt, systemContent, taskType, streamHandler)
 }
 
+// ValidateActiveCloudKey performs a live HTTP check against the configured Cloud AI provider
+func (c *Client) ValidateActiveCloudKey(ctx context.Context) error {
+	return c.hybridProvider.ValidateActiveCloudKey(ctx)
+}
+
 // ListLocalModels returns all available local models from Ollama
 func (c *Client) ListLocalModels(ctx context.Context) ([]ModelInfo, error) {
 	ollama := NewOllamaProvider(c.cfg)

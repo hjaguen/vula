@@ -193,6 +193,32 @@ func (p *GeminiProvider) IsAvailable(ctx context.Context) bool {
 	return p.getAPIKey() != ""
 }
 
+func (p *GeminiProvider) ValidateAPIKey(ctx context.Context) error {
+	apiKey := p.getAPIKey()
+	if apiKey == "" {
+		return fmt.Errorf("API key is missing")
+	}
+
+	url := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models?key=%s", apiKey)
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("network connection error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d (invalid or expired API key)", resp.StatusCode)
+	}
+
+	return nil
+}
+
 type geminiPart struct {
 	Text string `json:"text"`
 }
@@ -345,6 +371,41 @@ func (p *OpenAIProvider) getEndpoint() string {
 
 func (p *OpenAIProvider) IsAvailable(ctx context.Context) bool {
 	return p.getAPIKey() != "" || p.cfg.AI.CloudHost != ""
+}
+
+func (p *OpenAIProvider) ValidateAPIKey(ctx context.Context) error {
+	apiKey := p.getAPIKey()
+	if apiKey == "" && p.cfg.AI.CloudHost == "" {
+		return fmt.Errorf("API key is missing")
+	}
+
+	endpoint := "https://api.groq.com/openai/v1/models"
+	if p.cfg.AI.CloudProvider == "openai" {
+		endpoint = "https://api.openai.com/v1/models"
+	} else if p.cfg.AI.CloudHost != "" {
+		endpoint = strings.TrimSuffix(p.cfg.AI.CloudHost, "/chat/completions") + "/models"
+	}
+
+	client := &http.Client{Timeout: 3 * time.Second}
+	req, err := http.NewRequestWithContext(ctx, "GET", endpoint, nil)
+	if err != nil {
+		return err
+	}
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("network connection error: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("HTTP %d (invalid or expired API key)", resp.StatusCode)
+	}
+
+	return nil
 }
 
 type openAIReq struct {
@@ -517,6 +578,19 @@ func (h *HybridProvider) AskWithTaskType(ctx context.Context, prompt string, sys
 	}
 
 	return "", fmt.Errorf("neither local Ollama nor Cloud AI is available. Start Ollama locally ('ollama serve') or add a cloud API key ('vula ai config --key=gemini:YOUR_KEY')")
+}
+
+func (h *HybridProvider) ValidateActiveCloudKey(ctx context.Context) error {
+	if h.cloudProvider == nil {
+		return fmt.Errorf("no cloud provider configured")
+	}
+	if gemini, ok := h.cloudProvider.(*GeminiProvider); ok {
+		return gemini.ValidateAPIKey(ctx)
+	}
+	if openAI, ok := h.cloudProvider.(*OpenAIProvider); ok {
+		return openAI.ValidateAPIKey(ctx)
+	}
+	return nil
 }
 
 func notifyCloudUse(title string) {

@@ -706,7 +706,12 @@ var aiStatusCmd = &cobra.Command{
 			if len(keyVal) > 8 {
 				masked = keyVal[:4] + "..." + keyVal[len(keyVal)-4:]
 			}
-			fmt.Printf("  • API Key:              %s (%s)\n", ui.SuccessStyle.Render("✓ Configured"), masked)
+			valErr := client.ValidateActiveCloudKey(ctx)
+			if valErr == nil {
+				fmt.Printf("  • API Key:              %s (%s - Valid & Reachable)\n", ui.SuccessStyle.Render("✓ Configured"), masked)
+			} else {
+				fmt.Printf("  • API Key:              %s (%s - %v)\n", ui.WarnStyle.Render("⚠️ Invalid/Reachable issue"), masked, valErr)
+			}
 		} else {
 			fmt.Printf("  • API Key:              %s (Set with 'vula ai config --key=%s:YOUR_KEY')\n", ui.WarnStyle.Render("⚠️ Missing"), keyName)
 		}
@@ -750,16 +755,19 @@ var aiConfigCmd = &cobra.Command{
 			cfg.AI.HeavyTokenThreshold = cfgThreshold
 			updated = true
 		}
+		var keyProviderName, keyProviderVal string
 		if cfgKey != "" {
 			parts := strings.SplitN(cfgKey, ":", 2)
 			if len(parts) == 2 {
 				if cfg.AI.APIKeys == nil {
 					cfg.AI.APIKeys = make(map[string]string)
 				}
-				cfg.AI.APIKeys[parts[0]] = parts[1]
+				keyProviderName = parts[0]
+				keyProviderVal = parts[1]
+				cfg.AI.APIKeys[keyProviderName] = keyProviderVal
 				updated = true
 			} else {
-				log.Error("Invalid key format. Use --key=provider:API_KEY (e.g. --key=gemini:AIzaSy...)")
+				log.Error("Invalid key format. Use --key=provider:API_KEY (e.g. --key=groq:gsk_...)")
 				os.Exit(1)
 			}
 		}
@@ -767,9 +775,9 @@ var aiConfigCmd = &cobra.Command{
 		if !updated {
 			fmt.Println(ui.WarnStyle.Render("No configuration flags passed."))
 			fmt.Println("Usage examples:")
-			fmt.Println("  vula ai config --mode=hybrid --provider=gemini")
-			fmt.Println("  vula ai config --key=gemini:AIzaSyYourGeminiKeyHere")
-			fmt.Println("  vula ai config --cloud-model=gemini-2.0-flash")
+			fmt.Println("  vula ai config --mode=hybrid --provider=groq")
+			fmt.Println("  vula ai config --key=groq:gsk_YourGroqKeyHere")
+			fmt.Println("  vula ai config --cloud-model=llama-3.3-70b-versatile")
 			return
 		}
 
@@ -779,6 +787,19 @@ var aiConfigCmd = &cobra.Command{
 		}
 
 		fmt.Println(ui.SuccessStyle.Render("✓ Vula AI configuration updated and saved successfully!"))
+
+		// Perform live validation check if a key was configured
+		if keyProviderVal != "" {
+			ctx, cancel := context.WithTimeout(context.Background(), 4*time.Second)
+			defer cancel()
+			client := ai.NewClient(cfg)
+			fmt.Printf("%s Validating %s API key live with remote endpoint...\n", ui.InfoStyle.Render("⚡"), keyProviderName)
+			if err := client.ValidateActiveCloudKey(ctx); err != nil {
+				fmt.Printf("  %s Key saved, but live validation check failed: %v\n", ui.WarnStyle.Render("⚠️ Warning:"), err)
+			} else {
+				fmt.Printf("  %s Live validation succeeded! '%s' API key is active and ready.\n", ui.SuccessStyle.Render("✓"), keyProviderName)
+			}
+		}
 	},
 }
 
