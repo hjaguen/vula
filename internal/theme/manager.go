@@ -43,8 +43,8 @@ var BuiltInThemes = map[string]ThemePalette{
 	"catppuccin": {
 		Name:           "catppuccin",
 		DisplayName:    "Catppuccin Mocha",
-		AccentColor:    "#CBA6F7",
-		SecondaryColor: "#89B4FA",
+		AccentColor:    "#89B4FA",
+		SecondaryColor: "#CBA6F7",
 		GtkTheme:       "Yaru-dark",
 		GnomeAccent:    "purple",
 		Background:     "#1E1E2E",
@@ -52,6 +52,19 @@ var BuiltInThemes = map[string]ThemePalette{
 		HeaderBg:       "#11111B",
 		TitlebarBg:     "#181825",
 		TitlebarFg:     "#CDD6F4",
+	},
+	"catppuccin-latte": {
+		Name:           "catppuccin-latte",
+		DisplayName:    "Catppuccin Latte",
+		AccentColor:    "#1E66F5",
+		SecondaryColor: "#EA76CB",
+		GtkTheme:       "Yaru",
+		GnomeAccent:    "blue",
+		Background:     "#EFF1F5",
+		Foreground:     "#4C4F69",
+		HeaderBg:       "#E6E9EF",
+		TitlebarBg:     "#DCE0E8",
+		TitlebarFg:     "#4C4F69",
 	},
 	"nord": {
 		Name:           "nord",
@@ -68,16 +81,198 @@ var BuiltInThemes = map[string]ThemePalette{
 	},
 	"rose-pine": {
 		Name:           "rose-pine",
-		DisplayName:    "Rosé Pine",
-		AccentColor:    "#EBBCBA",
-		SecondaryColor: "#31748F",
+		DisplayName:    "Rosé Pine Dawn",
+		AccentColor:    "#56949F",
+		SecondaryColor: "#907AA9",
+		GtkTheme:       "Yaru",
+		GnomeAccent:    "teal",
+		Background:     "#FAF4ED",
+		Foreground:     "#575279",
+		HeaderBg:       "#F2E9E1",
+		TitlebarBg:     "#FFFFFF",
+		TitlebarFg:     "#575279",
+	},
+	"kanagawa": {
+		Name:           "kanagawa",
+		DisplayName:    "Kanagawa Wave",
+		AccentColor:    "#7E9CD8",
+		SecondaryColor: "#957FB8",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "blue",
+		Background:     "#1F1F28",
+		Foreground:     "#DCD7BA",
+		HeaderBg:       "#16161D",
+		TitlebarBg:     "#2A2A37",
+		TitlebarFg:     "#DCD7BA",
+	},
+	"gruvbox": {
+		Name:           "gruvbox",
+		DisplayName:    "Gruvbox Dark",
+		AccentColor:    "#7DAEA3",
+		SecondaryColor: "#D8A657",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "yellow",
+		Background:     "#282828",
+		Foreground:     "#D4BE98",
+		HeaderBg:       "#1D2021",
+		TitlebarBg:     "#3C3836",
+		TitlebarFg:     "#D4BE98",
+	},
+	"everforest": {
+		Name:           "everforest",
+		DisplayName:    "Everforest Dark",
+		AccentColor:    "#7FBBB3",
+		SecondaryColor: "#A7C080",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "green",
+		Background:     "#2D353B",
+		Foreground:     "#D3C6AA",
+		HeaderBg:       "#232A2E",
+		TitlebarBg:     "#343F44",
+		TitlebarFg:     "#D3C6AA",
+	},
+	"ethereal": {
+		Name:           "ethereal",
+		DisplayName:    "Ethereal Glow",
+		AccentColor:    "#7D82D9",
+		SecondaryColor: "#FFCEAD",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "purple",
+		Background:     "#060B1E",
+		Foreground:     "#FFCEAD",
+		HeaderBg:       "#040714",
+		TitlebarBg:     "#0C1433",
+		TitlebarFg:     "#FFCEAD",
+	},
+	"hackerman": {
+		Name:           "hackerman",
+		DisplayName:    "Hackerman Cyberpunk",
+		AccentColor:    "#82FB9C",
+		SecondaryColor: "#50F7D4",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "green",
+		Background:     "#0B0C16",
+		Foreground:     "#DDF7FF",
+		HeaderBg:       "#06070D",
+		TitlebarBg:     "#121424",
+		TitlebarFg:     "#DDF7FF",
+	},
+	"lumon": {
+		Name:           "lumon",
+		DisplayName:    "Lumon Slate",
+		AccentColor:    "#8BC9EB",
+		SecondaryColor: "#6FB8E3",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "blue",
+		Background:     "#16242D",
+		Foreground:     "#D6E2EE",
+		HeaderBg:       "#0F1920",
+		TitlebarBg:     "#1D303C",
+		TitlebarFg:     "#D6E2EE",
+	},
+	"matte-black": {
+		Name:           "matte-black",
+		DisplayName:    "Matte Black",
+		AccentColor:    "#E68E0D",
+		SecondaryColor: "#FFC107",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "orange",
+		Background:     "#121212",
+		Foreground:     "#BEBEBE",
+		HeaderBg:       "#0A0A0A",
+		TitlebarBg:     "#1E1E1E",
+		TitlebarFg:     "#BEBEBE",
+	},
+	"miasma": {
+		Name:           "miasma",
+		DisplayName:    "Miasma Forest",
+		AccentColor:    "#78824B",
+		SecondaryColor: "#C9A554",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "green",
+		Background:     "#222222",
+		Foreground:     "#C2C2B0",
+		HeaderBg:       "#181818",
+		TitlebarBg:     "#2C2C2C",
+		TitlebarFg:     "#C2C2B0",
+	},
+	"osaka-jade": {
+		Name:           "osaka-jade",
+		DisplayName:    "Osaka Jade",
+		AccentColor:    "#509475",
+		SecondaryColor: "#2DD5B7",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "teal",
+		Background:     "#111C18",
+		Foreground:     "#C1C497",
+		HeaderBg:       "#0B1310",
+		TitlebarBg:     "#192923",
+		TitlebarFg:     "#C1C497",
+	},
+	"retro-82": {
+		Name:           "retro-82",
+		DisplayName:    "Retro 82 Synthwave",
+		AccentColor:    "#FAA968",
+		SecondaryColor: "#028391",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "orange",
+		Background:     "#05182E",
+		Foreground:     "#F6DCAC",
+		HeaderBg:       "#030F1D",
+		TitlebarBg:     "#092444",
+		TitlebarFg:     "#F6DCAC",
+	},
+	"ristretto": {
+		Name:           "ristretto",
+		DisplayName:    "Ristretto Espresso",
+		AccentColor:    "#F38D70",
+		SecondaryColor: "#A8A9EB",
 		GtkTheme:       "Yaru-dark",
 		GnomeAccent:    "red",
-		Background:     "#191724",
-		Foreground:     "#E0DEF4",
-		HeaderBg:       "#16141F",
-		TitlebarBg:     "#1F1D2E",
-		TitlebarFg:     "#E0DEF4",
+		Background:     "#2C2525",
+		Foreground:     "#E6D9DB",
+		HeaderBg:       "#1E1919",
+		TitlebarBg:     "#3A3131",
+		TitlebarFg:     "#E6D9DB",
+	},
+	"vantablack": {
+		Name:           "vantablack",
+		DisplayName:    "Vantablack OLED",
+		AccentColor:    "#8D8D8D",
+		SecondaryColor: "#ECECEC",
+		GtkTheme:       "Yaru-dark",
+		GnomeAccent:    "slate",
+		Background:     "#000000",
+		Foreground:     "#FFFFFF",
+		HeaderBg:       "#000000",
+		TitlebarBg:     "#111111",
+		TitlebarFg:     "#FFFFFF",
+	},
+	"flexoki-light": {
+		Name:           "flexoki-light",
+		DisplayName:    "Flexoki Paper Light",
+		AccentColor:    "#205EA6",
+		SecondaryColor: "#CE5D97",
+		GtkTheme:       "Yaru",
+		GnomeAccent:    "blue",
+		Background:     "#FFFCF0",
+		Foreground:     "#100F0F",
+		HeaderBg:       "#F2EFE9",
+		TitlebarBg:     "#E6E4D9",
+		TitlebarFg:     "#100F0F",
+	},
+	"white": {
+		Name:           "white",
+		DisplayName:    "Pure Crisp Light",
+		AccentColor:    "#6E6E6E",
+		SecondaryColor: "#1A1A1A",
+		GtkTheme:       "Yaru",
+		GnomeAccent:    "slate",
+		Background:     "#FFFFFF",
+		Foreground:     "#000000",
+		HeaderBg:       "#F5F5F5",
+		TitlebarBg:     "#EAEAEA",
+		TitlebarFg:     "#000000",
 	},
 }
 
@@ -155,7 +350,11 @@ func (m *Manager) ApplyTheme(themeName string) error {
 	}
 
 	// 1. GNOME Shell & Accent Color
-	_ = gnome.SetDconfKey("org.gnome.desktop.interface", "color-scheme", "'prefer-dark'")
+	colorScheme := "'prefer-dark'"
+	if palette.Name == "catppuccin-latte" || palette.Name == "flexoki-light" || palette.Name == "white" || palette.Name == "rose-pine" {
+		colorScheme = "'prefer-light'"
+	}
+	_ = gnome.SetDconfKey("org.gnome.desktop.interface", "color-scheme", colorScheme)
 	_ = gnome.SetDconfKey("org.gnome.desktop.interface", "accent-color", fmt.Sprintf("'%s'", palette.GnomeAccent))
 
 	// 2. GTK 3 & GTK 4 Custom CSS Override for Window Titlebars & Top Bar
@@ -246,12 +445,42 @@ headerbar label, windowtitle label {
 	}
 }
 
-// EnsureThemeWallpaper creates a high-definition 4K SVG art wallpaper matching the palette
+var ThemePreferredWallpapers = map[string]string{
+	"tokyonight":       "tokyo-night_0-tokyo-night.jpg",
+	"catppuccin":       "catppuccin_2-waves.png",
+	"catppuccin-latte": "catppuccin-latte_1-color-fade.png",
+	"nord":             "nord_1-city-view.png",
+	"rose-pine":        "rose-pine_1-funky-shapes.jpg",
+	"kanagawa":         "kanagawa_1-kanagawa.jpg",
+	"gruvbox":          "gruvbox_1-the-backwater.jpg",
+	"everforest":       "everforest_1-tree-tops.jpg",
+	"ethereal":         "ethereal_1-cosmic.jpg",
+	"hackerman":        "hackerman_1-synth-scape.jpg",
+	"lumon":            "lumon_01-united-in-severance.jpg",
+	"matte-black":      "matte-black_0-ship-at-sea.jpg",
+	"miasma":           "miasma_01-nature-of-fe.png",
+	"osaka-jade":       "osaka-jade_1-growing-city.jpg",
+	"retro-82":         "retro-82_1-launch.png",
+	"ristretto":        "ristretto_0-launch.png",
+	"vantablack":       "vantablack_0-dot-hands.jpg",
+	"flexoki-light":    "flexoki-light_1-orb.png",
+	"white":            "white_1-white.jpg",
+}
+
+// EnsureThemeWallpaper creates or resolves the theme wallpaper path
 func EnsureThemeWallpaper(p ThemePalette) (string, error) {
 	home := os.Getenv("HOME")
 	wpDir := filepath.Join(home, ".config", "vula", "wallpapers")
 	if err := os.MkdirAll(wpDir, 0755); err != nil {
 		return "", err
+	}
+
+	// 1. Check for preferred wallpaper image in ~/.config/vula/wallpapers/
+	if prefImg, exists := ThemePreferredWallpapers[p.Name]; exists {
+		imgPath := filepath.Join(wpDir, prefImg)
+		if _, err := os.Stat(imgPath); err == nil {
+			return imgPath, nil
+		}
 	}
 
 	wpPath := filepath.Join(wpDir, fmt.Sprintf("%s.svg", p.Name))

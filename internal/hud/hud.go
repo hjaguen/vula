@@ -581,11 +581,23 @@ func (m Model) View() string {
 	case ModeTheme:
 		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 Theme Selector\n\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 Theme Selector (19 Themes)\n\n"))
 		if m.statusMsg != "" {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		}
-		for i, t := range m.themesList {
+
+		maxVisible := 8
+		start := 0
+		if m.themeIdx >= maxVisible {
+			start = m.themeIdx - maxVisible + 1
+		}
+		end := start + maxVisible
+		if end > len(m.themesList) {
+			end = len(m.themesList)
+		}
+
+		for i := start; i < end; i++ {
+			t := m.themesList[i]
 			cursor := "  "
 			titleStyle := lipgloss.NewStyle().Foreground(ui.TextLightColor)
 			accentBlock := lipgloss.NewStyle().Foreground(lipgloss.Color(t.AccentColor)).Bold(true).Render("■")
@@ -600,7 +612,7 @@ func (m Model) View() string {
 				titleStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
 			}
 
-			line := fmt.Sprintf("%s%s %-12s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
+			line := fmt.Sprintf("%s%s %-18s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
 			b.WriteString(line)
 			b.WriteString("\n")
 		}
