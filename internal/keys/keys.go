@@ -24,14 +24,25 @@ type Keybinding struct {
 }
 
 var DefaultKeybindings = []Keybinding{
+	// Launchers & System
 	{
 		ID:          "hud",
 		Title:       "Vula HUD Launcher",
 		Description: "Toggle Spotlight-style application & command launcher",
-		Category:    "Launcher",
+		Category:    "System & Launchers",
 		Shortcut:    "<Super>space",
 		Command:     "~/.local/bin/vula-hud-launch",
 	},
+	{
+		ID:          "keys_map",
+		Title:       "Keybindings Cheat-Sheet",
+		Description: "Open interactive keyboard shortcuts map",
+		Category:    "System & Launchers",
+		Shortcut:    "<Super><Shift>k",
+		Command:     "vula keys",
+	},
+
+	// Voice & AI
 	{
 		ID:          "voice_dictate",
 		Title:       "Voice Dictation",
@@ -56,25 +67,169 @@ var DefaultKeybindings = []Keybinding{
 		Shortcut:    "<Super><Alt>c",
 		Command:     "~/.local/bin/vula ai explain",
 	},
+
+	// Window & Tiling Management
+	{
+		ID:          "tactile_grid",
+		Title:       "Tactile Window Grid",
+		Description: "Open lettered grid matrix to place & resize windows",
+		Category:    "Window Management",
+		Shortcut:    "<Super>t",
+		Command:     "gnome-shell extension (tactile)",
+	},
 	{
 		ID:          "tiling_toggle",
 		Title:       "Toggle Auto-Tiling",
-		Description: "Toggle automatic window tiling layout",
+		Description: "Toggle automatic window tiling gaps & layout",
 		Category:    "Window Management",
-		Shortcut:    "<Super>t",
-		Command:     "~/.local/bin/vula desktop toggle-tile",
+		Shortcut:    "<Super><Alt>t",
+		Command:     "gnome-shell extension (tiling-assistant)",
 	},
 	{
-		ID:          "keys_map",
-		Title:       "Keybindings Cheat-Sheet",
-		Description: "Open interactive keyboard shortcuts map",
-		Category:    "System",
-		Shortcut:    "<Super><Shift>k",
-		Command:     "vula keys",
+		ID:          "tile_left_half",
+		Title:       "Snap Window Left Half",
+		Description: "Snap window to left 50% screen column",
+		Category:    "Window Management",
+		Shortcut:    "<Super>Left",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_right_half",
+		Title:       "Snap Window Right Half",
+		Description: "Snap window to right 50% screen column",
+		Category:    "Window Management",
+		Shortcut:    "<Super>Right",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_top_half",
+		Title:       "Snap Top / Maximize",
+		Description: "Snap window to top half or maximize screen space",
+		Category:    "Window Management",
+		Shortcut:    "<Super>Up",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_bottom_half",
+		Title:       "Snap Bottom / Restore",
+		Description: "Snap window to bottom half or restore size",
+		Category:    "Window Management",
+		Shortcut:    "<Super>Down",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_quarter_topleft",
+		Title:       "Snap Top-Left Quarter",
+		Description: "Snap window to top-left 25% quadrant",
+		Category:    "Window Management",
+		Shortcut:    "<Super><Alt>u",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_quarter_topright",
+		Title:       "Snap Top-Right Quarter",
+		Description: "Snap window to top-right 25% quadrant",
+		Category:    "Window Management",
+		Shortcut:    "<Super><Alt>i",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_quarter_botleft",
+		Title:       "Snap Bottom-Left Quarter",
+		Description: "Snap window to bottom-left 25% quadrant",
+		Category:    "Window Management",
+		Shortcut:    "<Super><Alt>j",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+	{
+		ID:          "tile_quarter_botright",
+		Title:       "Snap Bottom-Right Quarter",
+		Description: "Snap window to bottom-right 25% quadrant",
+		Category:    "Window Management",
+		Shortcut:    "<Super><Alt>k",
+		Command:     "gnome-shell extension (tiling-assistant)",
+	},
+
+	// Window State Controls
+	{
+		ID:          "window_close",
+		Title:       "Close Active Window",
+		Description: "Close currently focused desktop window",
+		Category:    "Window Controls",
+		Shortcut:    "<Super>q",
+		Command:     "org.gnome.desktop.wm.keybindings close",
+	},
+	{
+		ID:          "window_minimize",
+		Title:       "Minimize Active Window",
+		Description: "Minimize active window to panel",
+		Category:    "Window Controls",
+		Shortcut:    "<Super>h",
+		Command:     "org.gnome.desktop.wm.keybindings minimize",
+	},
+	{
+		ID:          "window_maximize",
+		Title:       "Maximize / Restore Window",
+		Description: "Toggle fullscreen maximized state",
+		Category:    "Window Controls",
+		Shortcut:    "<Super>m",
+		Command:     "org.gnome.desktop.wm.keybindings toggle-maximized",
+	},
+	{
+		ID:          "show_desktop",
+		Title:       "Show Desktop",
+		Description: "Hide all windows to view clean desktop",
+		Category:    "Window Controls",
+		Shortcut:    "<Super>d",
+		Command:     "org.gnome.desktop.wm.keybindings show-desktop",
+	},
+	{
+		ID:          "window_drag",
+		Title:       "Drag Window Anywhere",
+		Description: "Hold Super and click anywhere inside window to drag",
+		Category:    "Window Controls",
+		Shortcut:    "<Super>Click",
+		Command:     "org.gnome.desktop.wm.preferences mouse-button-modifier",
+	},
+
+	// Workspaces & Navigation
+	{
+		ID:          "workspace_switch",
+		Title:       "Switch Workspace 1-6",
+		Description: "Directly jump to workspace 1 through 6",
+		Category:    "Workspaces & Navigation",
+		Shortcut:    "<Super>1..6",
+		Command:     "org.gnome.desktop.wm.keybindings switch-to-workspace-N",
+	},
+	{
+		ID:          "workspace_move_window",
+		Title:       "Move Window to Workspace 1-6",
+		Description: "Move focused window to workspace 1 through 6",
+		Category:    "Workspaces & Navigation",
+		Shortcut:    "<Shift><Super>1..6",
+		Command:     "org.gnome.desktop.wm.keybindings move-to-workspace-N",
+	},
+	{
+		ID:          "workspace_navigate",
+		Title:       "Navigate Workspaces",
+		Description: "Switch to adjacent workspace (Vim HJKL or Arrows)",
+		Category:    "Workspaces & Navigation",
+		Shortcut:    "<Alt><Super>Arrows",
+		Command:     "org.gnome.desktop.wm.keybindings switch-to-workspace-dir",
+	},
+
+	// Dock Quick Jump
+	{
+		ID:          "dock_jump",
+		Title:       "Dock App Quick Jump 1-9",
+		Description: "Launch or switch to pinned dock app position 1 through 9",
+		Category:    "Dock Quick Jump",
+		Shortcut:    "<Alt>1..9",
+		Command:     "org.gnome.shell.keybindings app-shift-N",
 	},
 }
 
-// FormatKeycap transforms <Super><Alt>v into [Super] [Alt] [V]
+// FormatKeycap transforms <Super><Alt>v into [Super] + [Alt] + [V]
 func FormatKeycap(shortcut string) string {
 	if shortcut == "" {
 		return "[Unset]"
@@ -155,8 +310,8 @@ func RenderTable() string {
 	kbList := GetKeybindings()
 
 	hdrStyle := lipgloss.NewStyle().Bold(true).Foreground(ui.SecondaryColor)
-	b.WriteString(hdrStyle.Render(fmt.Sprintf("  %-20s %-24s %s\n", "SHORTCUT", "ACTION", "DESCRIPTION")))
-	b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render("  "+strings.Repeat("─", 70)+"\n"))
+	b.WriteString(hdrStyle.Render(fmt.Sprintf("  %-26s %-28s %s\n", "SHORTCUT", "ACTION", "DESCRIPTION")))
+	b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render("  "+strings.Repeat("─", 84)+"\n"))
 
 	keyStyle := lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true)
 	titleStyle := lipgloss.NewStyle().Foreground(ui.TextLightColor).Bold(true)
@@ -164,7 +319,7 @@ func RenderTable() string {
 
 	for _, kb := range kbList {
 		keycap := FormatKeycap(kb.Shortcut)
-		line := fmt.Sprintf("  %-20s %-24s %s\n", keyStyle.Render(keycap), titleStyle.Render(kb.Title), descStyle.Render(kb.Description))
+		line := fmt.Sprintf("  %-26s %-28s %s\n", keyStyle.Render(keycap), titleStyle.Render(kb.Title), descStyle.Render(kb.Description))
 		b.WriteString(line)
 	}
 
@@ -293,7 +448,7 @@ func (m Model) View() string {
 		}
 
 		keycap := FormatKeycap(kb.Shortcut)
-		line := fmt.Sprintf("%s%-22s %-26s %s", cursor, keyStyle.Render(keycap), titleStyle.Render(kb.Title), lipgloss.NewStyle().Foreground(ui.MutedColor).Render(kb.Category))
+		line := fmt.Sprintf("%s%-26s %-28s %s", cursor, keyStyle.Render(keycap), titleStyle.Render(kb.Title), lipgloss.NewStyle().Foreground(ui.MutedColor).Render(kb.Category))
 		b.WriteString(line)
 		b.WriteString("\n")
 	}
@@ -309,7 +464,7 @@ func (m Model) View() string {
 	}
 	b.WriteString("\n")
 
-	return ui.CardStyle.Width(72).Render(b.String()) + "\n"
+	return ui.CardStyle.Width(86).Render(b.String()) + "\n"
 }
 
 func RunInteractiveKeymap(cfg *config.Config) error {

@@ -96,12 +96,16 @@ func InitialModel(cfg *config.Config) Model {
 
 	allActions := []ActionItem{
 		{Title: "Execute OS Action (do)", Icon: "⚡", Category: "Actions", Command: "os_action"},
+		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "System", Command: "keys_map"},
+		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Command: "tactile_grid"},
+		{Title: "Toggle Auto-Tiling (Super+Alt+T)", Icon: "📐", Category: "Tiling", Command: "tiling_toggle"},
 		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
 		{Title: "Voice Listen AI", Icon: "🎧", Category: "Voice", Command: "voice_listen"},
 		{Title: "App Store TUI", Icon: "📦", Category: "Apps", Command: "apps_store"},
-		{Title: "Keybindings Map", Icon: "⌨️", Category: "System", Command: "keys_map"},
-		{Title: "Vula Doctor", Icon: "🩺", Category: "System", Command: "doctor"},
-		{Title: "Switch Theme", Icon: "🎨", Category: "Theme", Command: "theme"},
+		{Title: "Developer Font Picker", Icon: "🔤", Category: "System", Command: "font_picker"},
+		{Title: "WebApps Manager", Icon: "🌐", Category: "Apps", Command: "webapp_mgr"},
+		{Title: "Vula Doctor Diagnostics", Icon: "🩺", Category: "System", Command: "doctor"},
+		{Title: "Switch Theme (19 Palettes)", Icon: "🎨", Category: "Theme", Command: "theme"},
 		{Title: "Open Terminal", Icon: "💻", Category: "Apps", Command: "terminal"},
 		{Title: "Ask Vula AI", Icon: "🤖", Category: "AI", IsAI: true},
 		{Title: "Voice Dictation", Icon: "🎙", Category: "Voice", Command: "voice_dictate"},
@@ -380,6 +384,34 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		home := os.Getenv("HOME")
 		vulaBin := filepath.Join(home, ".local", "bin", "vula")
 		c := exec.Command(vulaBin, "keys")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
+
+	case "tactile_grid":
+		_ = exec.Command("gdbus", "call", "--session", "--dest", "org.gnome.Shell", "--object-path", "/org/gnome/Shell", "--method", "org.gnome.Shell.Extensions.Tactile.ShowTiles").Run()
+		m.quitting = true
+		return *m, tea.Quit
+
+	case "tiling_toggle":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		_ = exec.Command(vulaBin, "desktop", "toggle-tile").Run()
+		m.statusMsg = "Toggled Auto-Tiling"
+		return *m, nil
+
+	case "font_picker":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "font", "list")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
+
+	case "webapp_mgr":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "webapp", "list")
 		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
 			return keysDoneMsg{err: err}
 		})
