@@ -592,7 +592,7 @@ func (m Model) View() string {
 		if len(m.filtered) == 0 {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No se encontraron comandos.\n"))
 		} else {
-			maxVisible := 3
+			maxVisible := 2
 			start := 0
 			if m.selectedIdx >= maxVisible {
 				start = m.selectedIdx - maxVisible + 1
