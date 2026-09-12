@@ -531,7 +531,7 @@ func (m Model) View() string {
 		Width(52).
 		Align(lipgloss.Center)
 	b.WriteString(titleStyle.Render("⚡ VULA HUD"))
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 
 	// 2. Sliding 3-Tab Carousel Row (3 spacious rounded-border badges shifting on Tab)
 	type TabInfo struct {
@@ -575,7 +575,7 @@ func (m Model) View() string {
 
 	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, renderedBadges[0], " ", renderedBadges[1], " ", renderedBadges[2])
 	b.WriteString(lipgloss.NewStyle().Width(52).Align(lipgloss.Center).Render(badgeRow))
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 
 	// 3. Search Bar Container (always visible for visual consistency across all tabs)
 	searchBox := lipgloss.NewStyle().
@@ -585,7 +585,7 @@ func (m Model) View() string {
 		Width(50).
 		Render("🔍 " + m.input.View())
 	b.WriteString(searchBox)
-	b.WriteString("\n\n")
+	b.WriteString("\n")
 
 	switch m.mode {
 	case ModeCommands:
@@ -625,7 +625,7 @@ func (m Model) View() string {
 
 					line1 := fmt.Sprintf("%s  %s", iconBox, titleStr)
 					line2 := fmt.Sprintf("   %s", subStr)
-					b.WriteString(line1 + "\n" + line2 + "\n\n")
+					b.WriteString(line1 + "\n" + line2 + "\n")
 				}
 			}
 		}
