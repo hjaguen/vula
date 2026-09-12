@@ -533,22 +533,47 @@ func (m Model) View() string {
 	b.WriteString(titleStyle.Render("⚡ VULA HUD"))
 	b.WriteString("\n\n")
 
-	// 2. Mode Pill Badges Row: [ >_ COMANDOS ] [ ⚡ ACCIÓN OS ] [ 🤖 IA CHAT ] [ 🎙 VOZ ] [ 🎨 TEMA ]
-	renderBadge := func(label string, active bool, activeColor lipgloss.Color) string {
-		style := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder())
-		if active {
-			return style.BorderForeground(activeColor).Foreground(activeColor).Bold(true).Render(label)
-		}
-		return style.BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render(label)
+	// 2. Sliding 3-Tab Carousel Row (3 spacious rounded-border badges shifting on Tab)
+	type TabInfo struct {
+		Label string
+		Color lipgloss.Color
+	}
+	tabMap := map[Mode]TabInfo{
+		ModeCommands: {Label: ">_ COMANDOS", Color: ui.PrimaryColor},
+		ModeDo:       {Label: "⚡ ACCIÓN OS", Color: ui.SecondaryColor},
+		ModeAI:       {Label: "🤖 IA CHAT", Color: ui.PrimaryColor},
+		ModeVoice:    {Label: "🎙 VOZ", Color: ui.SecondaryColor},
+		ModeTheme:    {Label: "🎨 TEMA", Color: ui.PrimaryColor},
 	}
 
-	badgeComandos := renderBadge(">_ COMANDOS", m.mode == ModeCommands, ui.PrimaryColor)
-	badgeAccion := renderBadge("⚡ ACCIÓN", m.mode == ModeDo, ui.SecondaryColor)
-	badgeAI := renderBadge("🤖 IA", m.mode == ModeAI, ui.PrimaryColor)
-	badgeVoice := renderBadge("🎙 VOZ", m.mode == ModeVoice, ui.SecondaryColor)
-	badgeTheme := renderBadge("🎨 TEMA", m.mode == ModeTheme, ui.PrimaryColor)
+	var visibleModes []Mode
+	switch m.mode {
+	case ModeCommands:
+		visibleModes = []Mode{ModeCommands, ModeDo, ModeAI}
+	case ModeDo:
+		visibleModes = []Mode{ModeCommands, ModeDo, ModeAI}
+	case ModeAI:
+		visibleModes = []Mode{ModeDo, ModeAI, ModeVoice}
+	case ModeVoice:
+		visibleModes = []Mode{ModeAI, ModeVoice, ModeTheme}
+	case ModeTheme:
+		visibleModes = []Mode{ModeVoice, ModeTheme, ModeCommands}
+	default:
+		visibleModes = []Mode{ModeCommands, ModeDo, ModeAI}
+	}
 
-	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, badgeComandos, " ", badgeAccion, " ", badgeAI, " ", badgeVoice, " ", badgeTheme)
+	var renderedBadges []string
+	for _, modeKey := range visibleModes {
+		info := tabMap[modeKey]
+		style := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder())
+		if modeKey == m.mode {
+			renderedBadges = append(renderedBadges, style.BorderForeground(info.Color).Foreground(info.Color).Bold(true).Render(info.Label))
+		} else {
+			renderedBadges = append(renderedBadges, style.BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render(info.Label))
+		}
+	}
+
+	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, renderedBadges[0], " ", renderedBadges[1], " ", renderedBadges[2])
 	b.WriteString(lipgloss.NewStyle().Width(52).Align(lipgloss.Center).Render(badgeRow))
 	b.WriteString("\n\n")
 
@@ -565,9 +590,9 @@ func (m Model) View() string {
 	switch m.mode {
 	case ModeCommands:
 		if len(m.filtered) == 0 {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No actions found.\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No se encontraron comandos.\n"))
 		} else {
-			maxVisible := 5
+			maxVisible := 3
 			start := 0
 			if m.selectedIdx >= maxVisible {
 				start = m.selectedIdx - maxVisible + 1
@@ -652,7 +677,7 @@ func (m Model) View() string {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		}
 
-		maxVisible := 8
+		maxVisible := 4
 		start := 0
 		if m.themeIdx >= maxVisible {
 			start = m.themeIdx - maxVisible + 1
