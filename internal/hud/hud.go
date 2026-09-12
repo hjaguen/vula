@@ -593,7 +593,7 @@ func (m Model) View() string {
 
 					iconBox := lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true).Render("▶ " + a.Icon)
 					titleStr := lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render(a.Title)
-					subStr := lipgloss.NewStyle().Foreground(ui.TextLightColor).Italic(true).Render(fmt.Sprintf("%s • %s", a.Category, a.Description))
+					subStr := lipgloss.NewStyle().Foreground(ui.TextLightColor).Italic(true).Render(truncateText(fmt.Sprintf("%s • %s", a.Category, a.Description), 44))
 
 					cardContent := fmt.Sprintf("%s  %s\n   %s", iconBox, titleStr, subStr)
 					b.WriteString(cardStyle.Render(cardContent))
@@ -601,7 +601,7 @@ func (m Model) View() string {
 				} else {
 					iconBox := lipgloss.NewStyle().Foreground(ui.MutedColor).Render("  " + a.Icon)
 					titleStr := lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(a.Title)
-					subStr := lipgloss.NewStyle().Foreground(ui.MutedColor).Render(fmt.Sprintf("%s • %s", a.Category, a.Description))
+					subStr := lipgloss.NewStyle().Foreground(ui.MutedColor).Render(truncateText(fmt.Sprintf("%s • %s", a.Category, a.Description), 44))
 
 					line1 := fmt.Sprintf("%s  %s", iconBox, titleStr)
 					line2 := fmt.Sprintf("   %s", subStr)
@@ -701,6 +701,13 @@ func (m Model) View() string {
 	b.WriteString(footer)
 
 	return ui.CardStyle.Width(54).Render(b.String()) + "\n"
+}
+
+func truncateText(s string, maxLen int) string {
+	if len(s) > maxLen {
+		return s[:maxLen-3] + "..."
+	}
+	return s
 }
 
 func RunHUD(cfg *config.Config) error {
