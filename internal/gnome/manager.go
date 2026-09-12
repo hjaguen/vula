@@ -141,6 +141,9 @@ VULA_BIN="$HOME/.local/bin/vula"
 
 (
   sleep 0.3
+  if command -v xprop &>/dev/null; then
+    xprop -name "Vula HUD" -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "0x2, 0x0, 0x0, 0x0, 0x0" 2>/dev/null || true
+  fi
   if command -v wmctrl &>/dev/null; then
     wmctrl -r "Vula HUD" -b add,above,sticky 2>/dev/null || true
   fi
