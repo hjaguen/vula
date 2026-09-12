@@ -83,6 +83,9 @@ func (m *Manager) ConfigureTilingKeybindings() error {
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-up", "['<Alt><Super>Up', '<Alt><Super>k']")
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-down", "['<Alt><Super>Down', '<Alt><Super>j']")
 
+	// Clear conflicting GNOME shell message tray shortcut for Super+m (keep Super+v)
+	_ = SetDconfKey("org.gnome.shell.keybindings", "toggle-message-tray", "['<Super>v']")
+
 	// Window state controls
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "minimize", "['<Super>h']")
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "show-desktop", "['<Super>d']")
