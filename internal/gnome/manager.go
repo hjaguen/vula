@@ -164,10 +164,10 @@ if command -v ghostty &>/dev/null; then
             --window-decorations=false \
             --gtk-single-instance=false \
             -e "$VULA_BIN" hud
+elif command -v xterm &>/dev/null; then
+    xterm -title "Vula HUD" -name "vula-hud" -geometry 60x28 -bg "#1a1b26" -fg "#c0caf5" -fa "Monospace" -fs 11 -xrm "XTerm*borderWidth: 0" -e "$VULA_BIN" hud
 elif command -v gnome-terminal &>/dev/null; then
     GDK_BACKEND=x11 gnome-terminal --class="vula-hud" --title="Vula HUD" --geometry=60x28 -- "$VULA_BIN" hud
-else
-    xterm -title "Vula HUD" -geometry 60x28 -e "$VULA_BIN" hud
 fi
 `
 	return os.WriteFile(scriptPath, []byte(content), 0755)
