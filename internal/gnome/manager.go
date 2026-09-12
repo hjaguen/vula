@@ -140,13 +140,20 @@ func EnsureHUDLauncherScript() error {
 VULA_BIN="$HOME/.local/bin/vula"
 
 (
-  sleep 0.3
-  if command -v xprop &>/dev/null; then
-    xprop -name "Vula HUD" -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "0x2, 0x0, 0x0, 0x0, 0x0" 2>/dev/null || true
-  fi
-  if command -v wmctrl &>/dev/null; then
-    wmctrl -r "Vula HUD" -b add,above,sticky 2>/dev/null || true
-  fi
+  for i in {1..15}; do
+    WID=""
+    if command -v xdotool &>/dev/null; then
+      WID=$(xdotool search --class "vula-hud" 2>/dev/null | tail -n 1)
+      if [ -z "$WID" ]; then
+        WID=$(xdotool search --name "Vula" 2>/dev/null | tail -n 1)
+      fi
+    fi
+    if [ -n "$WID" ] && command -v xprop &>/dev/null; then
+      xprop -id "$WID" -f _MOTIF_WM_HINTS 32c -set _MOTIF_WM_HINTS "0x2, 0x0, 0x0, 0x0, 0x0" 2>/dev/null || true
+      break
+    fi
+    sleep 0.2
+  done
 ) &
 
 if command -v ghostty &>/dev/null; then
