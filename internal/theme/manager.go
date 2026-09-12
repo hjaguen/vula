@@ -431,6 +431,25 @@ headerbar label, windowtitle label {
     background-color: %s !important;
     color: %s !important;
 }
+
+/* Hide GTK HeaderBar / Window Titlebar specifically for Vula HUD floating window */
+window.vula-hud headerbar,
+window.vula-hud .titlebar,
+window.vula-hud headerbar *,
+window.vula-hud .titlebar *,
+.vula-hud headerbar,
+.vula-hud .titlebar,
+.vula-hud headerbar * {
+    min-height: 0px !important;
+    height: 0px !important;
+    padding: 0px !important;
+    margin: 0px !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 0px !important;
+    opacity: 0 !important;
+}
 `, p.DisplayName, p.AccentColor, p.AccentColor, p.Background, p.Foreground, tbBg, tbFg, p.AccentColor, tbFg, hdrBg, p.Foreground)
 
 	dirs := []string{
