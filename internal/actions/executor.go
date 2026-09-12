@@ -211,6 +211,25 @@ func controlSystemSetting(ctx context.Context, setting, value string, cfg *confi
 			val = "false"
 		}
 		return exec.Command("gsettings", "set", "org.gnome.settings-daemon.plugins.color", "night-light-enabled", val).Run()
+
+	case "tiling":
+		if strings.Contains(strings.ToLower(value), "tactile") || strings.Contains(strings.ToLower(value), "grid") {
+			return exec.Command("gnome-extensions", "enable", "tactile@lundal.io").Run()
+		}
+		return exec.Command("gnome-extensions", "enable", "tiling-assistant@ubuntu.com").Run()
+
+	case "gaps", "window_gaps":
+		val := strings.TrimSuffix(strings.TrimSpace(value), "px")
+		if val == "" {
+			val = "6"
+		}
+		schema := "org.gnome.shell.extensions.tiling-assistant"
+		_ = exec.Command("gsettings", "set", schema, "window-gap", val).Run()
+		_ = exec.Command("gsettings", "set", schema, "single-screen-gap", val).Run()
+		_ = exec.Command("gsettings", "set", schema, "screen-top-gap", val).Run()
+		_ = exec.Command("gsettings", "set", schema, "screen-bottom-gap", val).Run()
+		_ = exec.Command("gsettings", "set", schema, "screen-left-gap", val).Run()
+		return exec.Command("gsettings", "set", schema, "screen-right-gap", val).Run()
 	}
 
 	return fmt.Errorf("unsupported system setting: %s", setting)

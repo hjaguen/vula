@@ -55,7 +55,7 @@ Example Output 3 (Move File):
 
 Allowed Enum Values:
 - "type": "launch_app", "manage_files", "control_system", "process_control", "search"
-- "setting": "brightness", "volume", "theme", "night_light", "screenshot", "lock"
+- "setting": "brightness", "volume", "theme", "night_light", "screenshot", "lock", "tiling", "gaps"
 - "operation": "move", "copy", "mkdir", "terminate", "find"
 
 CRITICAL: Return ONLY valid unadorned JSON. No markdown backticks, no explanatory chat, no disclaimers.`
@@ -116,6 +116,10 @@ func sanitizeActionPlan(plan *ActionPlan, originalPrompt string) {
 				act.Setting = "screenshot"
 			} else if strings.Contains(lowerPrompt, "bloquea") || strings.Contains(lowerPrompt, "lock") {
 				act.Setting = "lock"
+			} else if strings.Contains(lowerPrompt, "tiling") || strings.Contains(lowerPrompt, "ventana") || strings.Contains(lowerPrompt, "pantalla") {
+				act.Setting = "tiling"
+			} else if strings.Contains(lowerPrompt, "espacio") || strings.Contains(lowerPrompt, "gap") {
+				act.Setting = "gaps"
 			}
 		}
 

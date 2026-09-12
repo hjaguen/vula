@@ -35,6 +35,11 @@ var CuratedExtensions = []ExtensionRecipe{
 		Name:        "Tiling Assistant",
 		Description: "Built-in Ubuntu 24.04 tiling manager with quarter-snapping, gaps, and border highlights",
 	},
+	{
+		UUID:        "tactile@lundal.io",
+		Name:        "Tactile",
+		Description: "Interactive grid tiling overlay activated via Super+T for fast multi-zone window placement",
+	},
 }
 
 type ExtensionInfoResponse struct {

@@ -54,6 +54,19 @@ func (m *Manager) ConfigureTilingAssistant(gaps int, accentColor string) error {
 	return nil
 }
 
+// ConfigureTactile sets up Tactile interactive grid overlay shortcuts (Omakub style)
+func (m *Manager) ConfigureTactile() error {
+	schema := "org.gnome.shell.extensions.tactile"
+
+	// 1. Enable Tactile extension
+	_ = exec.Command("gnome-extensions", "enable", "tactile@lundal.io").Run()
+
+	// 2. Set Super+T to open Tactile grid overlay
+	_ = SetDconfKey(schema, "show-tiles", "['<Super>t']")
+
+	return nil
+}
+
 // ConfigureTilingKeybindings sets up vim-style window navigation and tiling hotkeys
 func (m *Manager) ConfigureTilingKeybindings() error {
 	// Focus window shortcuts (Vim keys: H, J, K, L)
@@ -74,6 +87,9 @@ func (m *Manager) ConfigureTilingKeybindings() error {
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "toggle-maximized", "['<Super>m']")
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "close", "['<Super>q', '<Alt>F4']")
 
+	// Mouse Window Modifier: Super + Left Click anywhere inside window to drag/move
+	_ = SetDconfKey("org.gnome.desktop.wm.preferences", "mouse-button-modifier", "'<Super>'")
+
 	// Mutter snapping & tiling ergonomics
 	_ = SetDconfKey("org.gnome.mutter", "edge-tiling", "true")
 	_ = SetDconfKey("org.gnome.mutter", "dynamic-workspaces", "true")
@@ -81,6 +97,9 @@ func (m *Manager) ConfigureTilingKeybindings() error {
 
 	// Apply Tiling Assistant Gaps & Border Highlight matching current theme
 	_ = m.ConfigureTilingAssistant(m.cfg.Desktop.GapsInner, m.cfg.Theme.AccentColor)
+
+	// Configure Tactile Grid Overlay (Omakub style)
+	_ = m.ConfigureTactile()
 
 	return nil
 }
