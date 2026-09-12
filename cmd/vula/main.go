@@ -17,10 +17,12 @@ import (
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
 	"github.com/vula-os/vula/internal/dotfiles"
+	"github.com/vula-os/vula/internal/font"
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/hud"
 	"github.com/vula-os/vula/internal/installer"
 	"github.com/vula-os/vula/internal/keys"
+	"github.com/vula-os/vula/internal/media"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
@@ -900,6 +902,144 @@ var actionsHistoryCmd = &cobra.Command{
 	},
 }
 
+var webappCmd = &cobra.Command{
+	Use:   "webapp",
+	Short: "Create and manage desktop launcher entries for web applications",
+}
+
+var webappAddCmd = &cobra.Command{
+	Use:   "add [Name] [URL] [IconURL]",
+	Short: "Create a desktop launcher for a web URL with auto-fetched icon",
+	Args:  cobra.RangeArgs(2, 3),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		targetURL := args[1]
+		customIcon := ""
+		if len(args) > 2 {
+			customIcon = args[2]
+		}
+		info, err := apps.AddWebApp(name, targetURL, customIcon)
+		if err != nil {
+			log.Error("Failed to add web app", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Web app '%s' created successfully!\n", ui.SuccessStyle.Render("✓"), info.Name)
+		fmt.Printf("  • URL:          %s\n", info.URL)
+		fmt.Printf("  • Desktop File: %s\n", info.DesktopPath)
+		fmt.Printf("  • Icon Path:    %s\n", info.IconPath)
+	},
+}
+
+var webappRemoveCmd = &cobra.Command{
+	Use:   "remove [Name]",
+	Short: "Remove a Vula-managed web app launcher",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		name := args[0]
+		if err := apps.RemoveWebApp(name); err != nil {
+			log.Error("Failed to remove web app", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Web app '%s' launcher removed.\n", ui.SuccessStyle.Render("✓"), name)
+	},
+}
+
+var webappListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all Vula-created web application launchers",
+	Run: func(cmd *cobra.Command, args []string) {
+		webApps, err := apps.ListWebApps()
+		if err != nil {
+			log.Error("Failed to list web apps", "error", err)
+			os.Exit(1)
+		}
+		fmt.Println(ui.RenderHeader("Vula Web Applications", fmt.Sprintf("Found %d web apps in ~/.local/share/applications", len(webApps))))
+		for _, app := range webApps {
+			fmt.Printf("  • %-20s %s\n", ui.InfoStyle.Render(app.Name), app.URL)
+		}
+		fmt.Println()
+	},
+}
+
+var fontCmd = &cobra.Command{
+	Use:   "font",
+	Short: "Manage and synchronize developer Nerd Fonts across Ghostty, Alacritty, VS Code, and GNOME",
+}
+
+var fontSetCmd = &cobra.Command{
+	Use:   "set [cascadia|firacode|jetbrains|meslo]",
+	Short: "Download and set developer font family",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		mgr, err := font.NewManager()
+		if err != nil {
+			log.Error("Font manager init failed", "error", err)
+			os.Exit(1)
+		}
+		recipe, err := mgr.SetFont(args[0])
+		if err != nil {
+			log.Error("Failed setting font", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Font set to %s (%s) across Ghostty, Alacritty, VS Code & GNOME!\n",
+			ui.SuccessStyle.Render("✓"), recipe.Name, recipe.FontFamily)
+	},
+}
+
+var fontListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List available developer Nerd Fonts",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(ui.RenderHeader("Developer Nerd Fonts", "Curated coding fonts with icon glyphs"))
+		for _, f := range font.AvailableFonts {
+			fmt.Printf("  • %-12s %-20s (%s)\n", ui.InfoStyle.Render(f.ID), f.Name, f.FontFamily)
+		}
+		fmt.Println()
+	},
+}
+
+var fontSizeCmd = &cobra.Command{
+	Use:   "size [pt]",
+	Short: "Update font size across Ghostty, Alacritty, and VS Code",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		size, err := strconv.Atoi(args[0])
+		if err != nil {
+			log.Error("Invalid font size. Expected integer pt value (e.g. 11)")
+			os.Exit(1)
+		}
+		mgr, _ := font.NewManager()
+		if err := mgr.SetFontSize(size); err != nil {
+			log.Error("Failed setting font size", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Font size set to %d pt across developer tools!\n", ui.SuccessStyle.Render("✓"), size)
+	},
+}
+
+var mediaCmd = &cobra.Command{
+	Use:   "media",
+	Short: "Media processing and screen recording conversion utilities",
+}
+
+var mediaWebm2Mp4Cmd = &cobra.Command{
+	Use:   "webm2mp4 [filepath]",
+	Short: "Convert GNOME screen recording .webm file to web-friendly .mp4 using ffmpeg",
+	Run: func(cmd *cobra.Command, args []string) {
+		inputPath := ""
+		if len(args) > 0 {
+			inputPath = args[0]
+		}
+		fmt.Printf("%s Converting .webm screen recording to .mp4...\n", ui.InfoStyle.Render("⚡"))
+		outPath, err := media.ConvertWebmToMp4(inputPath, "")
+		if err != nil {
+			log.Error("Media conversion failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Conversion complete: %s\n", ui.SuccessStyle.Render("✓"), outPath)
+	},
+}
+
 func init() {
 	aiConfigCmd.Flags().StringVar(&cfgMode, "mode", "", "AI mode: hybrid, local, cloud")
 	aiConfigCmd.Flags().StringVar(&cfgProvider, "provider", "", "Cloud provider: gemini, groq, ollama-cloud, openai")
@@ -950,6 +1090,16 @@ func init() {
 	keysCmd.AddCommand(keysListCmd)
 	keysCmd.AddCommand(keysSetCmd)
 
+	webappCmd.AddCommand(webappAddCmd)
+	webappCmd.AddCommand(webappRemoveCmd)
+	webappCmd.AddCommand(webappListCmd)
+
+	fontCmd.AddCommand(fontSetCmd)
+	fontCmd.AddCommand(fontListCmd)
+	fontCmd.AddCommand(fontSizeCmd)
+
+	mediaCmd.AddCommand(mediaWebm2Mp4Cmd)
+
 	rootCmd.AddCommand(doCmd)
 	rootCmd.AddCommand(actionsCmd)
 	rootCmd.AddCommand(doctorCmd)
@@ -964,6 +1114,9 @@ func init() {
 	rootCmd.AddCommand(wallpaperCmd)
 	rootCmd.AddCommand(dotfilesCmd)
 	rootCmd.AddCommand(appsCmd)
+	rootCmd.AddCommand(webappCmd)
+	rootCmd.AddCommand(fontCmd)
+	rootCmd.AddCommand(mediaCmd)
 	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(versionCmd)
 }

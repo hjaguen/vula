@@ -55,7 +55,7 @@ Example Output 3 (Move File):
 
 Allowed Enum Values:
 - "type": "launch_app", "manage_files", "control_system", "process_control", "search"
-- "setting": "brightness", "volume", "theme", "night_light", "screenshot", "lock", "tiling", "gaps"
+- "setting": "brightness", "volume", "theme", "night_light", "screenshot", "lock", "tiling", "gaps", "font", "font_size", "convert_media", "webapp"
 - "operation": "move", "copy", "mkdir", "terminate", "find"
 
 CRITICAL: Return ONLY valid unadorned JSON. No markdown backticks, no explanatory chat, no disclaimers.`
@@ -104,7 +104,17 @@ func sanitizeActionPlan(plan *ActionPlan, originalPrompt string) {
 
 		// Sanitize setting field if model echoed enum strings like "volume|brightness|..."
 		if strings.Contains(act.Setting, "|") || act.Setting == "" {
-			if strings.Contains(lowerPrompt, "brillo") || strings.Contains(lowerPrompt, "pantalla") {
+			if strings.Contains(lowerPrompt, "fuente") || strings.Contains(lowerPrompt, "font") {
+				if strings.Contains(lowerPrompt, "tamaño") || strings.Contains(lowerPrompt, "size") || strings.Contains(lowerPrompt, "pt") {
+					act.Setting = "font_size"
+				} else {
+					act.Setting = "font"
+				}
+			} else if strings.Contains(lowerPrompt, "convertir") || strings.Contains(lowerPrompt, "video") || strings.Contains(lowerPrompt, "mp4") || strings.Contains(lowerPrompt, "webm") {
+				act.Setting = "convert_media"
+			} else if strings.Contains(lowerPrompt, "app web") || strings.Contains(lowerPrompt, "webapp") {
+				act.Setting = "webapp"
+			} else if strings.Contains(lowerPrompt, "brillo") || strings.Contains(lowerPrompt, "pantalla") {
 				act.Setting = "brightness"
 			} else if strings.Contains(lowerPrompt, "volumen") || strings.Contains(lowerPrompt, "audio") || strings.Contains(lowerPrompt, "sonido") {
 				act.Setting = "volume"
@@ -116,7 +126,7 @@ func sanitizeActionPlan(plan *ActionPlan, originalPrompt string) {
 				act.Setting = "screenshot"
 			} else if strings.Contains(lowerPrompt, "bloquea") || strings.Contains(lowerPrompt, "lock") {
 				act.Setting = "lock"
-			} else if strings.Contains(lowerPrompt, "tiling") || strings.Contains(lowerPrompt, "ventana") || strings.Contains(lowerPrompt, "pantalla") {
+			} else if strings.Contains(lowerPrompt, "tiling") {
 				act.Setting = "tiling"
 			} else if strings.Contains(lowerPrompt, "espacio") || strings.Contains(lowerPrompt, "gap") {
 				act.Setting = "gaps"

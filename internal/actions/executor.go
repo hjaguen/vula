@@ -11,7 +11,10 @@ import (
 	"time"
 
 	"github.com/charmbracelet/huh"
+	"github.com/vula-os/vula/internal/apps"
 	"github.com/vula-os/vula/internal/config"
+	"github.com/vula-os/vula/internal/font"
+	"github.com/vula-os/vula/internal/media"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 )
@@ -230,6 +233,48 @@ func controlSystemSetting(ctx context.Context, setting, value string, cfg *confi
 		_ = exec.Command("gsettings", "set", schema, "screen-bottom-gap", val).Run()
 		_ = exec.Command("gsettings", "set", schema, "screen-left-gap", val).Run()
 		return exec.Command("gsettings", "set", schema, "screen-right-gap", val).Run()
+
+	case "font":
+		fm, err := font.NewManager()
+		if err != nil {
+			return err
+		}
+		_, err = fm.SetFont(value)
+		return err
+
+	case "font_size":
+		fm, err := font.NewManager()
+		if err != nil {
+			return err
+		}
+		var sz int
+		_, _ = fmt.Sscanf(value, "%d", &sz)
+		if sz == 0 {
+			sz = 12
+		}
+		return fm.SetFontSize(sz)
+
+	case "convert_media", "webm2mp4":
+		out, err := media.ConvertWebmToMp4(value, "")
+		if err == nil {
+			fmt.Printf("    Converted video saved to: %s\n", out)
+		}
+		return err
+
+	case "webapp":
+		parts := strings.SplitN(value, "|", 2)
+		name := parts[0]
+		targetURL := ""
+		if len(parts) > 1 {
+			targetURL = parts[1]
+		} else {
+			targetURL = name
+		}
+		info, err := apps.AddWebApp(name, targetURL, "")
+		if err == nil {
+			fmt.Printf("    Created Web App: %s (%s)\n", info.Name, info.URL)
+		}
+		return err
 	}
 
 	return fmt.Errorf("unsupported system setting: %s", setting)

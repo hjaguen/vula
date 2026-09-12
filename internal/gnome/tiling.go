@@ -97,6 +97,27 @@ func (m *Manager) ConfigureTilingKeybindings() error {
 	_ = SetDconfKey("org.gnome.mutter", "dynamic-workspaces", "true")
 	_ = SetDconfKey("org.gnome.mutter", "workspaces-only-on-primary", "false")
 
+	// Switch to direct workspace 1..6 (Super + 1..6)
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-1", "['<Super>1']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-2", "['<Super>2']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-3", "['<Super>3']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-4", "['<Super>4']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-5", "['<Super>5']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-to-workspace-6", "['<Super>6']")
+
+	// Move window to workspace 1..6 (Shift + Super + 1..6)
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-1", "['<Shift><Super>1']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-2", "['<Shift><Super>2']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-3", "['<Shift><Super>3']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-4", "['<Shift><Super>4']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-5", "['<Shift><Super>5']")
+	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "move-to-workspace-6", "['<Shift><Super>6']")
+
+	// Dock App Quick Jump (Alt + 1..9)
+	for i := 1; i <= 9; i++ {
+		_ = SetDconfKey("org.gnome.shell.keybindings", fmt.Sprintf("app-shift-%d", i), fmt.Sprintf("['<Alt>%d']", i))
+	}
+
 	// Apply Tiling Assistant Gaps & Border Highlight matching current theme
 	_ = m.ConfigureTilingAssistant(m.cfg.Desktop.GapsInner, m.cfg.Theme.AccentColor)
 
