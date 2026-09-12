@@ -14,6 +14,8 @@ Configura con un solo comando un conjunto completo de herramientas, fuentes, app
 - 🗄️ **`data-dba`**: Postgres Client, Redis Tools, DBeaver Community, Python (Pandas) y Cascadia Code.
 - ⚡ **`minimal`**: Entorno Tiling ultra-ligero de Vula con HUD flotante y Voz sin aplicaciones pesadas.
 
+![Vula Workstation Profiles Showcase](/vula_profiles_showcase.png)
+
 ```bash
 # Listar todos los perfiles disponibles
 vula profile list

@@ -2,6 +2,8 @@
 
 Vula incluye un motor de temas estéticos que sincroniza la paleta de colores de todo tu sistema en un solo comando: terminales (`Ghostty`, `Alacritty`), multiplexor (`Tmux`), editor (`Neovim`), resaltado de bordes de ventanas de GNOME y modo claro/oscuro.
 
+![Vula Themes Gallery Showcase](/vula_themes_showcase.png)
+
 ---
 
 ## 🎨 Lista de 19 Temas Disponibles

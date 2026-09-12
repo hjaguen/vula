@@ -2,6 +2,8 @@
 
 El **Vula HUD** es la pieza central de interacción del escritorio. Se trata de una interfaz TUI flotante (estilo Raycast / Spotlight) construida con la suite de Charm (`Bubbletea`, `Bubbles`, `Lipgloss`) de ultra bajo consumo de memoria y ejecución instantánea.
 
+![Vula HUD Showcase](/vula_hud_showcase.png)
+
 ---
 
 ## 🚀 Cómo invocar el HUD
