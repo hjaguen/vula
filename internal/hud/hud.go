@@ -533,39 +533,34 @@ func (m Model) View() string {
 	b.WriteString(titleStyle.Render("⚡ VULA HUD"))
 	b.WriteString("\n\n")
 
-	// 2. Mode Pill Badges Row: [ >_ COMANDOS ]  [ ⚡ ACCIÓN OS ]  [ 🤖 IA CHAT ]
-	badgeComandos := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render(">_ COMANDOS")
-	badgeAccion := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render("⚡ ACCIÓN OS")
-	badgeAI := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render("🤖 IA CHAT")
-
-	switch m.mode {
-	case ModeCommands:
-		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render(">_ COMANDOS")
-	case ModeDo:
-		badgeAccion = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.SecondaryColor).Foreground(ui.SecondaryColor).Bold(true).Render("⚡ ACCIÓN OS")
-	case ModeAI:
-		badgeAI = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render("🤖 IA CHAT")
-	case ModeVoice:
-		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.SecondaryColor).Foreground(ui.SecondaryColor).Bold(true).Render("🎙 VOZ")
-	case ModeTheme:
-		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render("🎨 TEMA")
+	// 2. Mode Pill Badges Row: [ >_ COMANDOS ] [ ⚡ ACCIÓN OS ] [ 🤖 IA CHAT ] [ 🎙 VOZ ] [ 🎨 TEMA ]
+	renderBadge := func(label string, active bool, activeColor lipgloss.Color) string {
+		style := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder())
+		if active {
+			return style.BorderForeground(activeColor).Foreground(activeColor).Bold(true).Render(label)
+		}
+		return style.BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render(label)
 	}
 
-	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, badgeComandos, " ", badgeAccion, " ", badgeAI)
+	badgeComandos := renderBadge(">_ COMANDOS", m.mode == ModeCommands, ui.PrimaryColor)
+	badgeAccion := renderBadge("⚡ ACCIÓN", m.mode == ModeDo, ui.SecondaryColor)
+	badgeAI := renderBadge("🤖 IA", m.mode == ModeAI, ui.PrimaryColor)
+	badgeVoice := renderBadge("🎙 VOZ", m.mode == ModeVoice, ui.SecondaryColor)
+	badgeTheme := renderBadge("🎨 TEMA", m.mode == ModeTheme, ui.PrimaryColor)
+
+	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, badgeComandos, " ", badgeAccion, " ", badgeAI, " ", badgeVoice, " ", badgeTheme)
 	b.WriteString(lipgloss.NewStyle().Width(52).Align(lipgloss.Center).Render(badgeRow))
 	b.WriteString("\n\n")
 
-	// 3. Search Bar Container
-	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice || m.mode == ModeTheme || m.mode == ModeDo {
-		searchBox := lipgloss.NewStyle().
-			Border(lipgloss.RoundedBorder()).
-			BorderForeground(ui.PrimaryColor).
-			Padding(0, 1).
-			Width(50).
-			Render("🔍 " + m.input.View())
-		b.WriteString(searchBox)
-		b.WriteString("\n\n")
-	}
+	// 3. Search Bar Container (always visible for visual consistency across all tabs)
+	searchBox := lipgloss.NewStyle().
+		Border(lipgloss.RoundedBorder()).
+		BorderForeground(ui.PrimaryColor).
+		Padding(0, 1).
+		Width(50).
+		Render("🔍 " + m.input.View())
+	b.WriteString(searchBox)
+	b.WriteString("\n\n")
 
 	switch m.mode {
 	case ModeCommands:
