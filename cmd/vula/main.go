@@ -23,6 +23,7 @@ import (
 	"github.com/vula-os/vula/internal/installer"
 	"github.com/vula-os/vula/internal/keys"
 	"github.com/vula-os/vula/internal/media"
+	"github.com/vula-os/vula/internal/profiles"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
@@ -1040,6 +1041,46 @@ var mediaWebm2Mp4Cmd = &cobra.Command{
 	},
 }
 
+var profileCmd = &cobra.Command{
+	Use:   "profile",
+	Short: "Manage Workstation Environment Profiles (Full-Stack Dev, DevOps, Designer, DBA, Minimal)",
+}
+
+var profileListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all available workstation environment profiles",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Println(profiles.RenderTable())
+	},
+}
+
+var profileApplyCmd = &cobra.Command{
+	Use:   "apply [profile-id]",
+	Short: "Apply a workstation profile by ID (e.g. vula profile apply full-stack-dev)",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		profileID := args[0]
+		if err := profiles.ApplyProfile(cfg, profileID); err != nil {
+			log.Error("Failed to apply profile", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
+var profileUICmd = &cobra.Command{
+	Use:     "ui",
+	Aliases: []string{"select"},
+	Short:   "Interactive Charm TUI workstation profile selector",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		if err := profiles.RunInteractiveProfileSelector(cfg); err != nil {
+			log.Error("Profile selector failed", "error", err)
+			os.Exit(1)
+		}
+	},
+}
+
 func init() {
 	aiConfigCmd.Flags().StringVar(&cfgMode, "mode", "", "AI mode: hybrid, local, cloud")
 	aiConfigCmd.Flags().StringVar(&cfgProvider, "provider", "", "Cloud provider: gemini, groq, ollama-cloud, openai")
@@ -1100,6 +1141,10 @@ func init() {
 
 	mediaCmd.AddCommand(mediaWebm2Mp4Cmd)
 
+	profileCmd.AddCommand(profileListCmd)
+	profileCmd.AddCommand(profileApplyCmd)
+	profileCmd.AddCommand(profileUICmd)
+
 	rootCmd.AddCommand(doCmd)
 	rootCmd.AddCommand(actionsCmd)
 	rootCmd.AddCommand(doctorCmd)
@@ -1118,6 +1163,7 @@ func init() {
 	rootCmd.AddCommand(fontCmd)
 	rootCmd.AddCommand(mediaCmd)
 	rootCmd.AddCommand(keysCmd)
+	rootCmd.AddCommand(profileCmd)
 	rootCmd.AddCommand(versionCmd)
 }
 

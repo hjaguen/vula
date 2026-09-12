@@ -4,6 +4,29 @@ Vula integra herramientas dedicadas para optimizar el flujo de trabajo de desarr
 
 ---
 
+## 🚀 Perfiles de Entorno de Trabajo (`vula profile`)
+
+Configura con un solo comando un conjunto completo de herramientas, fuentes, apps y temas adaptados a tu rol:
+
+- 💻 **`full-stack-dev`**: Node.js, Go, Python, Docker, Postman, VS Code, Lazygit y JetBrains Mono.
+- ☁️ **`devops`**: Docker, `kubectl`, Helm, `k9s`, Terraform, Ansible, Tmux y Hack Nerd Font.
+- 🎨 **`designer-creator`**: GIMP, Inkscape, Blender, OBS Studio, Canva/Figma WebApps y Fira Code.
+- 🗄️ **`data-dba`**: Postgres Client, Redis Tools, DBeaver Community, Python (Pandas) y Cascadia Code.
+- ⚡ **`minimal`**: Entorno Tiling ultra-ligero de Vula con HUD flotante y Voz sin aplicaciones pesadas.
+
+```bash
+# Listar todos los perfiles disponibles
+vula profile list
+
+# Aplicar un perfil específico
+vula profile apply full-stack-dev
+
+# Abrir el selector interactivo TUI de perfiles
+vula profile ui
+```
+
+---
+
 ## 🔤 Gestor de Fuentes Dev (`vula font`)
 
 Sincroniza fuentes **Nerd Fonts** de alta calidad (con glifos e íconos) entre terminales (`Ghostty`, `Alacritty`), editores (`VS Code`) e interfaz de GNOME.

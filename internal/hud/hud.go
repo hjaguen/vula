@@ -96,6 +96,7 @@ func InitialModel(cfg *config.Config) Model {
 
 	allActions := []ActionItem{
 		{Title: "Execute OS Action (do)", Icon: "⚡", Category: "Actions", Command: "os_action"},
+		{Title: "Workstation Profiles", Icon: "🚀", Category: "System", Command: "profile_selector"},
 		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "System", Command: "keys_map"},
 		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Command: "tactile_grid"},
 		{Title: "Toggle Auto-Tiling (Super+Alt+T)", Icon: "📐", Category: "Tiling", Command: "tiling_toggle"},
@@ -412,6 +413,14 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		home := os.Getenv("HOME")
 		vulaBin := filepath.Join(home, ".local", "bin", "vula")
 		c := exec.Command(vulaBin, "webapp", "list")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
+
+	case "profile_selector":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "profile", "ui")
 		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
 			return keysDoneMsg{err: err}
 		})

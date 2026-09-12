@@ -7,6 +7,7 @@ import (
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/packages"
+	"github.com/vula-os/vula/internal/profiles"
 	"github.com/vula-os/vula/internal/ui"
 )
 
@@ -21,14 +22,28 @@ type Modules struct {
 func RunInteractiveInstaller(cfg *config.Config) error {
 	fmt.Println(ui.RenderBanner())
 
+	var selectedProfile string
 	var selectedModules []string
 	var selectedTheme string
 	var selectedModel string
 
 	form := huh.NewForm(
 		huh.NewGroup(
+			huh.NewSelect[string]().
+				Title("Choose a Workstation Profile (Preconfigures apps, fonts & tools):").
+				Options(
+					huh.NewOption("💻 Full-Stack Web & Backend Dev (Node, Go, Python, Docker, Postman)", "full-stack-dev"),
+					huh.NewOption("☁️ DevOps & Cloud Engineer (K8s, Terraform, Ansible, Tmux)", "devops"),
+					huh.NewOption("🎨 UI/UX Designer & Creator (GIMP, Inkscape, Blender, OBS, Figma)", "designer-creator"),
+					huh.NewOption("🗄️ Database & Data Engineer (Postgres, Redis, DBeaver, Python)", "data-dba"),
+					huh.NewOption("⚡ Minimalist Workstation (Core Vula Tiling, HUD & Voice AI)", "minimal"),
+					huh.NewOption("⏩ Skip Profile (Core Vula Setup Only)", "none"),
+				).
+				Value(&selectedProfile),
+		),
+		huh.NewGroup(
 			huh.NewMultiSelect[string]().
-				Title("Select Vula modules to configure on Ubuntu 24.04:").
+				Title("Select Vula core modules to configure on Ubuntu 24.04:").
 				Options(
 					huh.NewOption("Developer Tooling (Mise, Git, Build tools, Neovim)", "devtools").Selected(true),
 					huh.NewOption("GNOME Shell Optimizations (Tiling, Shortcuts, Dark Mode)", "desktop").Selected(true),
@@ -72,6 +87,11 @@ func RunInteractiveInstaller(cfg *config.Config) error {
 	}
 
 	fmt.Println(ui.HeaderStyle.Render(" APPLYING CONFIGURATIONS "))
+
+	// Apply Workstation Profile if selected
+	if selectedProfile != "" && selectedProfile != "none" {
+		_ = profiles.ApplyProfile(cfg, selectedProfile)
+	}
 
 	pkgMgr := packages.NewManager()
 	gnomeMgr := gnome.NewManager(cfg)

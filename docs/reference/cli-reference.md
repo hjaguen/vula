@@ -19,6 +19,16 @@ vula version                   # Mostrar versión de Vula
 
 ---
 
+## 🚀 Perfiles de Entorno (`vula profile`)
+
+```bash
+vula profile list               # Listar perfiles (full-stack-dev, devops, designer-creator, data-dba, minimal)
+vula profile apply <profile-id> # Aplicar un perfil de trabajo completo
+vula profile ui                 # Selector TUI interactivo de perfiles
+```
+
+---
+
 ## 🤖 Subsistema de IA (`vula ai`)
 
 ```bash
