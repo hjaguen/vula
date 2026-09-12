@@ -60,7 +60,14 @@ func (m *Manager) InstallExtension(uuid string) error {
 	extDir := filepath.Join(home, ".local/share/gnome-shell/extensions", uuid)
 	_ = os.MkdirAll(extDir, 0755)
 
-	// 1. Query GNOME Extensions API for GNOME 46
+	// 1. Try DBus InstallRemoteExtension first for instant GNOME Shell registration
+	dbusCmd := fmt.Sprintf("gdbus call --session --dest org.gnome.Shell --object-path /org/gnome/Shell --method org.gnome.Shell.Extensions.InstallRemoteExtension \"%s\"", uuid)
+	if out, err := exec.Command("sh", "-c", dbusCmd).Output(); err == nil && strings.Contains(string(out), "successful") {
+		_ = exec.Command("gdbus", "call", "--session", "--dest", "org.gnome.Shell", "--object-path", "/org/gnome/Shell", "--method", "org.gnome.Shell.Extensions.EnableExtension", uuid).Run()
+		return nil
+	}
+
+	// 2. Fallback: Manual download & unzip
 	apiURL := fmt.Sprintf("https://extensions.gnome.org/extension-info/?uuid=%s&shell_version=46", uuid)
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get(apiURL)
@@ -87,7 +94,6 @@ func (m *Manager) InstallExtension(uuid string) error {
 		downloadFullURL = extInfo.DownloadURL
 	}
 
-	// 2. Download ZIP
 	zipResp, err := client.Get(downloadFullURL)
 	if err != nil {
 		return fmt.Errorf("failed downloading extension zip: %w", err)
@@ -106,12 +112,18 @@ func (m *Manager) InstallExtension(uuid string) error {
 	}
 	defer os.Remove(tempZip)
 
-	// 3. Unzip into target directory
 	if err := unzip(tempZip, extDir); err != nil {
 		return fmt.Errorf("failed unzipping extension: %w", err)
 	}
 
-	// 4. Enable extension via CLI
+	// Compile schema if present
+	schemasDir := filepath.Join(extDir, "schemas")
+	if _, err := os.Stat(schemasDir); err == nil {
+		_ = exec.Command("glib-compile-schemas", schemasDir).Run()
+	}
+
+	// Enable via DBus & CLI
+	_ = exec.Command("gdbus", "call", "--session", "--dest", "org.gnome.Shell", "--object-path", "/org/gnome/Shell", "--method", "org.gnome.Shell.Extensions.EnableExtension", uuid).Run()
 	_ = exec.Command("gnome-extensions", "enable", uuid).Run()
 	return nil
 }

@@ -46,8 +46,8 @@ func (m *Manager) ConfigureTilingAssistant(gaps int, accentColor string) error {
 	_ = SetDconfKey(schema, "tile-bottomleft-quarter", "['<Super><Alt>j']")
 	_ = SetDconfKey(schema, "tile-bottomright-quarter", "['<Super><Alt>k']")
 
-	// Auto-tile toggle shortcut
-	_ = SetDconfKey(schema, "auto-tile", "['<Super>t']")
+	// Auto-tile toggle shortcut for Tiling Assistant
+	_ = SetDconfKey(schema, "auto-tile", "['<Super><Alt>t']")
 	_ = SetDconfKey(schema, "enable-tiling-popup", "false")
 	_ = SetDconfKey(schema, "dynamic-keybinding-behavior", "0")
 
@@ -58,10 +58,12 @@ func (m *Manager) ConfigureTilingAssistant(gaps int, accentColor string) error {
 func (m *Manager) ConfigureTactile() error {
 	schema := "org.gnome.shell.extensions.tactile"
 
-	// 1. Enable Tactile extension
+	// 1. Ensure Tactile extension is installed & enabled
+	_ = m.InstallExtension("tactile@lundal.io")
+	_ = exec.Command("gdbus", "call", "--session", "--dest", "org.gnome.Shell", "--object-path", "/org/gnome/Shell", "--method", "org.gnome.Shell.Extensions.EnableExtension", "tactile@lundal.io").Run()
 	_ = exec.Command("gnome-extensions", "enable", "tactile@lundal.io").Run()
 
-	// 2. Set Super+T to open Tactile grid overlay
+	// 2. Set Super+t to open Tactile grid overlay exclusively
 	_ = SetDconfKey(schema, "show-tiles", "['<Super>t']")
 
 	return nil
