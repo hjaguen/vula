@@ -165,7 +165,7 @@ if command -v ghostty &>/dev/null; then
             --gtk-single-instance=false \
             -e "$VULA_BIN" hud
 elif command -v gnome-terminal &>/dev/null; then
-    gnome-terminal --class="vula-hud" --title="Vula HUD" --geometry=60x28 -- "$VULA_BIN" hud
+    GDK_BACKEND=x11 gnome-terminal --class="vula-hud" --title="Vula HUD" --geometry=60x28 -- "$VULA_BIN" hud
 else
     xterm -title "Vula HUD" -geometry 60x28 -e "$VULA_BIN" hud
 fi
