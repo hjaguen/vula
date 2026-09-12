@@ -37,11 +37,12 @@ const (
 )
 
 type ActionItem struct {
-	Title    string
-	Icon     string
-	Category string
-	Command  string
-	IsAI     bool
+	Title       string
+	Icon        string
+	Category    string
+	Command     string
+	Description string
+	IsAI        bool
 }
 
 type Model struct {
@@ -83,7 +84,7 @@ func InitialModel(cfg *config.Config) Model {
 	ti.Placeholder = "Buscar, 'do ...' para acción, '?' para IA..."
 	ti.Focus()
 	ti.CharLimit = 256
-	ti.Width = 28
+	ti.Width = 38
 	ti.PromptStyle = lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true)
 	ti.TextStyle = lipgloss.NewStyle().Foreground(ui.TextLightColor)
 
@@ -95,24 +96,24 @@ func InitialModel(cfg *config.Config) Model {
 	themesList := themeMgr.ListThemes()
 
 	allActions := []ActionItem{
-		{Title: "Execute OS Action (do)", Icon: "⚡", Category: "Actions", Command: "os_action"},
-		{Title: "Workstation Profiles", Icon: "🚀", Category: "System", Command: "profile_selector"},
-		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "System", Command: "keys_map"},
-		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Command: "tactile_grid"},
-		{Title: "Toggle Auto-Tiling (Super+Alt+T)", Icon: "📐", Category: "Tiling", Command: "tiling_toggle"},
-		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Voice", Command: "voice_assistant"},
-		{Title: "Voice Listen AI", Icon: "🎧", Category: "Voice", Command: "voice_listen"},
-		{Title: "App Store TUI", Icon: "📦", Category: "Apps", Command: "apps_store"},
-		{Title: "Developer Font Picker", Icon: "🔤", Category: "System", Command: "font_picker"},
-		{Title: "WebApps Manager", Icon: "🌐", Category: "Apps", Command: "webapp_mgr"},
-		{Title: "Vula Doctor Diagnostics", Icon: "🩺", Category: "System", Command: "doctor"},
-		{Title: "Switch Theme (19 Palettes)", Icon: "🎨", Category: "Theme", Command: "theme"},
-		{Title: "Open Terminal", Icon: "💻", Category: "Apps", Command: "terminal"},
-		{Title: "Ask Vula AI", Icon: "🤖", Category: "AI", IsAI: true},
-		{Title: "Voice Dictation", Icon: "🎙", Category: "Voice", Command: "voice_dictate"},
-		{Title: "Synthesize Voice", Icon: "🔊", Category: "Voice", Command: "voice_speak"},
-		{Title: "Vula Settings", Icon: "⚙", Category: "System", Command: "config"},
-		{Title: "Lock Screen", Icon: "🔒", Category: "System", Command: "lock"},
+		{Title: "Execute OS Action", Icon: "⚡", Category: "Sistema", Description: "Ejecutar comando del terminal o script por voz/texto", Command: "os_action"},
+		{Title: "Workstation Profiles", Icon: "🚀", Category: "Sistema", Description: "Configurar perfil (Full-Stack, DevOps, Design, DBA, Minimal)", Command: "profile_selector"},
+		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "Configuración", Description: "Ver y editar atajos de teclado del escritorio", Command: "keys_map"},
+		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Description: "Malla interactiva de letras para mover y redimensionar", Command: "tactile_grid"},
+		{Title: "Toggle Auto-Tiling (Super+Alt+T)", Icon: "📐", Category: "Tiling", Description: "Alternar distribución automática de ventanas", Command: "tiling_toggle"},
+		{Title: "Voice AI Assistant", Icon: "⚡", Category: "Asistente IA", Description: "Conversar con el asistente de voz Vula", Command: "voice_assistant"},
+		{Title: "Voice Listen AI", Icon: "🎧", Category: "Asistente IA", Description: "Escuchar instrucción por voz y responder", Command: "voice_listen"},
+		{Title: "App Store TUI", Icon: "📦", Category: "Tienda", Description: "Instalar y gestionar aplicaciones y herramientas dev", Command: "apps_store"},
+		{Title: "Developer Font Picker", Icon: "🔤", Category: "Sistema", Description: "Seleccionar fuente de programación Nerd Font", Command: "font_picker"},
+		{Title: "WebApps Manager", Icon: "🌐", Category: "Apps", Description: "Crear y gestionar aplicaciones web de escritorio", Command: "webapp_mgr"},
+		{Title: "Vula Doctor Diagnostics", Icon: "🩺", Category: "Sistema", Description: "Diagnóstico de salud de sonido, IA y escritorio", Command: "doctor"},
+		{Title: "Switch Theme (19 Palettes)", Icon: "🎨", Category: "Apariencia", Description: "Cambiar entre temas visuales (Oscuro/Claro/etc.)", Command: "theme"},
+		{Title: "Open Terminal", Icon: "💻", Category: "Herramientas", Description: "Abrir emulador de terminal moderno", Command: "terminal"},
+		{Title: "Ask Vula AI", Icon: "🤖", Category: "IA", Description: "Chatear directamente con el motor Vula AI", IsAI: true},
+		{Title: "Voice Dictation", Icon: "🎙", Category: "Voz & IA", Description: "Dictar por voz e insertar texto en ventana activa", Command: "voice_dictate"},
+		{Title: "Synthesize Voice", Icon: "🔊", Category: "Voz & IA", Description: "Probar síntesis de voz neural Piper TTS", Command: "voice_speak"},
+		{Title: "Vula Settings", Icon: "⚙", Category: "Sistema", Description: "Ver y modificar configuración de Vula", Command: "config"},
+		{Title: "Lock Screen", Icon: "🔒", Category: "Sistema", Description: "Bloquear sesión de pantalla", Command: "lock"},
 	}
 
 	currentThemeIdx := 0
@@ -523,65 +524,94 @@ func (m Model) View() string {
 
 	b := strings.Builder{}
 
-	// Header Bar
-	headerLeft := lipgloss.NewStyle().
+	// 1. Centered Header Title
+	titleStyle := lipgloss.NewStyle().
 		Bold(true).
 		Foreground(ui.PrimaryColor).
-		Render("⚡ VULA HUD")
-
-	modeBadge := ""
-	switch m.mode {
-	case ModeCommands:
-		modeBadge = ui.SuccessBadge.Render("COMANDOS")
-	case ModeDo:
-		modeBadge = ui.SuccessBadge.Render("⚡ ACCIÓN OS")
-	case ModeAI:
-		modeBadge = ui.BadgeStyle.Render("🤖 IA CHAT")
-	case ModeDoctor:
-		modeBadge = ui.InfoStyle.Render("DOCTOR")
-	case ModeVoice:
-		modeBadge = ui.WarnBadge.Render("🎙 VOZ")
-	case ModeConfig:
-		modeBadge = ui.BadgeStyle.Render("CONFIG")
-	case ModeTheme:
-		modeBadge = ui.SuccessBadge.Render("🎨 TEMA")
-	}
-
-	topBar := lipgloss.JoinHorizontal(lipgloss.Center, headerLeft, "  ", modeBadge)
-	b.WriteString(topBar)
+		Width(52).
+		Align(lipgloss.Center)
+	b.WriteString(titleStyle.Render("⚡ VULA HUD"))
 	b.WriteString("\n\n")
 
+	// 2. Mode Pill Badges Row: [ >_ COMANDOS ]  [ ⚡ ACCIÓN OS ]  [ 🤖 IA CHAT ]
+	badgeComandos := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render(">_ COMANDOS")
+	badgeAccion := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render("⚡ ACCIÓN OS")
+	badgeAI := lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.MutedColor).Foreground(ui.MutedColor).Render("🤖 IA CHAT")
+
+	switch m.mode {
+	case ModeCommands:
+		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render(">_ COMANDOS")
+	case ModeDo:
+		badgeAccion = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.SecondaryColor).Foreground(ui.SecondaryColor).Bold(true).Render("⚡ ACCIÓN OS")
+	case ModeAI:
+		badgeAI = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render("🤖 IA CHAT")
+	case ModeVoice:
+		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.SecondaryColor).Foreground(ui.SecondaryColor).Bold(true).Render("🎙 VOZ")
+	case ModeTheme:
+		badgeComandos = lipgloss.NewStyle().Padding(0, 1).Border(lipgloss.RoundedBorder()).BorderForeground(ui.PrimaryColor).Foreground(ui.PrimaryColor).Bold(true).Render("🎨 TEMA")
+	}
+
+	badgeRow := lipgloss.JoinHorizontal(lipgloss.Center, badgeComandos, " ", badgeAccion, " ", badgeAI)
+	b.WriteString(lipgloss.NewStyle().Width(52).Align(lipgloss.Center).Render(badgeRow))
+	b.WriteString("\n\n")
+
+	// 3. Search Bar Container
 	if m.mode == ModeCommands || m.mode == ModeAI || m.mode == ModeVoice || m.mode == ModeTheme || m.mode == ModeDo {
-		b.WriteString(m.input.View())
+		searchBox := lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(ui.PrimaryColor).
+			Padding(0, 1).
+			Width(50).
+			Render("🔍 " + m.input.View())
+		b.WriteString(searchBox)
 		b.WriteString("\n\n")
 	}
 
 	switch m.mode {
 	case ModeCommands:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
-		b.WriteString("\n")
 		if len(m.filtered) == 0 {
 			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  No actions found.\n"))
 		} else {
-			for i, a := range m.filtered {
-				cursor := "  "
-				iconStyle := lipgloss.NewStyle().Foreground(ui.PrimaryColor)
-				titleStyle := lipgloss.NewStyle().Foreground(ui.TextLightColor)
+			maxVisible := 5
+			start := 0
+			if m.selectedIdx >= maxVisible {
+				start = m.selectedIdx - maxVisible + 1
+			}
+			end := start + maxVisible
+			if end > len(m.filtered) {
+				end = len(m.filtered)
+			}
 
+			for i := start; i < end; i++ {
+				a := m.filtered[i]
 				if i == m.selectedIdx {
-					cursor = lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true).Render("▶ ")
-					iconStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
-					titleStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
-				}
+					cardStyle := lipgloss.NewStyle().
+						Border(lipgloss.RoundedBorder()).
+						BorderForeground(ui.PrimaryColor).
+						Padding(0, 1).
+						Width(50)
 
-				line := fmt.Sprintf("%s%s  %s", cursor, iconStyle.Render(a.Icon), titleStyle.Render(a.Title))
-				b.WriteString(line)
-				b.WriteString("\n")
+					iconBox := lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true).Render("▶ " + a.Icon)
+					titleStr := lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render(a.Title)
+					subStr := lipgloss.NewStyle().Foreground(ui.TextLightColor).Italic(true).Render(fmt.Sprintf("%s • %s", a.Category, a.Description))
+
+					cardContent := fmt.Sprintf("%s  %s\n   %s", iconBox, titleStr, subStr)
+					b.WriteString(cardStyle.Render(cardContent))
+					b.WriteString("\n")
+				} else {
+					iconBox := lipgloss.NewStyle().Foreground(ui.MutedColor).Render("  " + a.Icon)
+					titleStr := lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(a.Title)
+					subStr := lipgloss.NewStyle().Foreground(ui.MutedColor).Render(fmt.Sprintf("%s • %s", a.Category, a.Description))
+
+					line1 := fmt.Sprintf("%s  %s", iconBox, titleStr)
+					line2 := fmt.Sprintf("   %s", subStr)
+					b.WriteString(line1 + "\n" + line2 + "\n\n")
+				}
 			}
 		}
 
 	case ModeDoctor:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 50)))
 		b.WriteString("\n")
 		if m.loading {
 			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Running...")))
@@ -590,7 +620,7 @@ func (m Model) View() string {
 		}
 
 	case ModeAI:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 50)))
 		b.WriteString("\n")
 		if m.loading {
 			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render("Consulting AI...")))
@@ -599,30 +629,30 @@ func (m Model) View() string {
 			content := m.aiResponse.String()
 			rendered := lipgloss.NewStyle().
 				Foreground(ui.TextLightColor).
-				Width(32).
+				Width(48).
 				Render(content)
 			b.WriteString(rendered)
 			b.WriteString("\n")
 		} else if !m.loading {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Type & press Enter\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Escribe tu consulta y presiona Enter\n"))
 		}
 
 	case ModeVoice:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 50)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Voice Subsystem\n\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎙 Subsistema de Voz\n\n"))
 		if m.recording {
-			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), ui.WarnStyle.Render("Recording...")))
+			b.WriteString(fmt.Sprintf("  %s %s\n", m.spinner.View(), ui.WarnStyle.Render("Grabando voz (4s)...")))
 		} else if m.statusMsg != "" {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		} else {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Enter to record.\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render("  Presiona Enter para grabar audio.\n"))
 		}
 
 	case ModeTheme:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 50)))
 		b.WriteString("\n")
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 Theme Selector (19 Themes)\n\n"))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true).Render("  🎨 Selector de Temas Estéticos (19 Paletas)\n\n"))
 		if m.statusMsg != "" {
 			b.WriteString(fmt.Sprintf("  %s %s\n\n", ui.SuccessStyle.Render("✓"), m.statusMsg))
 		}
@@ -653,13 +683,13 @@ func (m Model) View() string {
 				titleStyle = lipgloss.NewStyle().Foreground(ui.SecondaryColor).Bold(true)
 			}
 
-			line := fmt.Sprintf("%s%s %-18s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
+			line := fmt.Sprintf("%s%s %-24s%s", cursor, accentBlock, titleStyle.Render(t.DisplayName), activeTag)
 			b.WriteString(line)
 			b.WriteString("\n")
 		}
 
 	case ModeConfig:
-		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 32)))
+		b.WriteString(lipgloss.NewStyle().Foreground(ui.BorderColor).Render(strings.Repeat("─", 50)))
 		b.WriteString("\n")
 		b.WriteString(lipgloss.NewStyle().Foreground(ui.TextLightColor).Render(m.configOutput))
 	}
@@ -667,10 +697,10 @@ func (m Model) View() string {
 	b.WriteString("\n")
 	footer := lipgloss.NewStyle().
 		Foreground(ui.MutedColor).
-		Render(" [Tab] Mode  •  [Esc] Close")
+		Render(" [Tab] Cambiar Modo  •  [Esc] Cerrar HUD")
 	b.WriteString(footer)
 
-	return ui.CardStyle.Width(38).Render(b.String()) + "\n"
+	return ui.CardStyle.Width(54).Render(b.String()) + "\n"
 }
 
 func RunHUD(cfg *config.Config) error {
