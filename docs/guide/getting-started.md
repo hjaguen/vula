@@ -36,11 +36,15 @@ Para verificar que todos los subsistemas (GNOME, Audio, Ollama, Proveedores de I
 vula doctor
 ```
 
-Para ver la tarjeta informativa de rendimiento del sistema:
+Para ver la tarjeta informativa de rendimiento y especificaciones del sistema:
 
 ```bash
 vula fetch
 ```
+
+<p align="center">
+  <img src="/vula_fetch_showcase.png" alt="Vula Fetch System Output" style="border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); margin: 1.5rem 0;" />
+</p>
 
 ---
 

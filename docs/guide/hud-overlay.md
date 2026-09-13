@@ -26,17 +26,37 @@ vula hud
 
 El HUD cuenta con tres modos principales navegables con la tecla **`Tab`**:
 
-### 1. Modo Lanzador de Aplicaciones & Búsqueda Fuzzy (`App Launcher`)
-- **Descripción:** Permite buscar y ejecutar instantáneamente cualquier aplicación instalada en Ubuntu, aplicaciones web creadas con `vula webapp` o comandos del sistema.
-- **Uso:** Simplemente empieza a escribir el nombre de la app (ejemplo: `code`, `brave`, `chatgpt`) y presiona `Enter` para lanzarla.
+### 1. Modo Lanzador de Comandos & Búsqueda Fuzzy (`>_ COMANDOS`)
+- **Descripción:** Permite buscar y ejecutar instantáneamente cualquier aplicación instalada en Ubuntu, perfiles de trabajo, herramientas del sistema o comandos.
+- **Uso:** Escribe el nombre del comando o filtro para ubicarlo rápidamente.
 
-### 2. Modo Selector Interactivo de Temas (`Themes`)
-- **Descripción:** Muestra la colección completa de **19 temas curados** en una lista paginada y adaptable.
-- **Uso:** Navega con las flechas `↑` y `↓`. Al presionar `Enter`, Vula aplica instantáneamente el tema seleccionado, cambiando la paleta de colores, el fondo de pantalla en alta resolución y el modo claro/oscuro de GNOME.
+<p align="center">
+  <img src="/vula_hud_commands.png" alt="Modo Comandos Vula HUD" style="border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); margin: 1.5rem 0;" />
+</p>
 
-### 3. Modo Chat con IA Assist (`AI Chat`)
-- **Descripción:** Consulta a la IA nativa de Vula directamente desde el panel flotante. La IA recibe el contexto activo del sistema.
-- **Uso:** Escribe tu consulta o comando (ejemplo: `"¿Cómo encuentro archivos de más de 100MB?"`) y recibe respuestas estructuradas en streaming.
+### 2. Modo Acción OS (`⚡ ACCIÓN OS`)
+- **Descripción:** Ejecuta instrucciones directas sobre el sistema operativo (ajustar brillo, volumen, bloquear pantalla, etc.).
+- **Uso:** Escribe `do <instrucción>` o selecciona este modo.
+
+<p align="center">
+  <img src="/vula_hud_action.png" alt="Modo Acción OS Vula HUD" style="border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); margin: 1.5rem 0;" />
+</p>
+
+### 3. Modo Chat con IA Assist (`🤖 IA CHAT`)
+- **Descripción:** Consulta a la IA nativa de Vula directamente desde el panel flotante con contexto del sistema.
+- **Uso:** Escribe tu consulta en lenguaje natural y presiona `Enter`.
+
+<p align="center">
+  <img src="/vula_hud_ai.png" alt="Modo Chat IA Vula HUD" style="border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); margin: 1.5rem 0;" />
+</p>
+
+### 4. Modo Asistente y Dictado por Voz (`🎙 VOZ`)
+- **Descripción:** Graba audio de voz, lo transcribe localmente con Whisper STT y ejecuta la instrucción o responde por TTS.
+- **Uso:** Presiona `Enter` para grabar audio.
+
+<p align="center">
+  <img src="/vula_hud_voice.png" alt="Modo Voz Vula HUD" style="border-radius: 10px; box-shadow: 0 4px 16px rgba(0,0,0,0.3); margin: 1.5rem 0;" />
+</p>
 
 ---
 
