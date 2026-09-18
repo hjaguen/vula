@@ -31,7 +31,7 @@ var Catalog = []Profile{
 	{
 		ID:            "full-stack-dev",
 		Name:          "Full-Stack Web & Backend Developer",
-		Description:   "Complete stack: Node.js, Go, Python, Docker, Postman, VS Code, Lazygit & JetBrains Mono",
+		Description:   "Complete stack: Node.js, Go, Python, Docker, Herdr AI Fleet, Lazygit & JetBrains Mono",
 		Icon:          "💻",
 		Category:      "Software Engineering",
 		AptPackages:   []string{"git", "curl", "build-essential", "pkg-config", "libssl-dev", "xclip", "wl-clipboard"},
@@ -43,7 +43,7 @@ var Catalog = []Profile{
 	{
 		ID:            "devops",
 		Name:          "DevOps & Cloud Infrastructure Engineer",
-		Description:   "Cloud & containers: Docker, kubectl, Helm, k9s, Terraform, Ansible, Tmux & Hack font",
+		Description:   "Cloud & containers: Docker, kubectl, Herdr AI Fleet, Helm, k9s, Terraform, Tmux & Hack font",
 		Icon:          "☁️",
 		Category:      "Infrastructure",
 		AptPackages:   []string{"git", "curl", "tmux", "htop", "net-tools", "dnsutils", "xclip", "wl-clipboard"},

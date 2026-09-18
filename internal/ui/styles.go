@@ -51,6 +51,10 @@ var (
 	InfoStyle = lipgloss.NewStyle().
 			Foreground(SecondaryColor)
 
+	AccentStyle = lipgloss.NewStyle().
+			Bold(true).
+			Foreground(AccentColor)
+
 	// Container & Box Styles
 	CardStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).

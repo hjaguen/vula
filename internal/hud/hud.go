@@ -97,6 +97,7 @@ func InitialModel(cfg *config.Config) Model {
 
 	allActions := []ActionItem{
 		{Title: "Execute OS Action", Icon: "⚡", Category: "Sistema", Description: "Ejecutar comando del terminal o script por voz/texto", Command: "os_action"},
+		{Title: "Herdr Agent Fleet", Icon: "🤖", Category: "IA & Terminal", Description: "Multiplexor de agentes de IA autónomos (vula agents)", Command: "agents_fleet"},
 		{Title: "Workstation Profiles", Icon: "🚀", Category: "Sistema", Description: "Configurar perfil (Full-Stack, DevOps, Design, DBA, Minimal)", Command: "profile_selector"},
 		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "Configuración", Description: "Ver y editar atajos de teclado del escritorio", Command: "keys_map"},
 		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Description: "Malla interactiva de letras para mover y redimensionar", Command: "tactile_grid"},
@@ -373,6 +374,17 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		m.input.SetValue("do ")
 		m.input.Placeholder = "Escribe tu acción (ej: 'ajusta el brillo al 40%')..."
 		return *m, nil
+
+	case "agents_fleet":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		if _, err := os.Stat(vulaBin); err != nil {
+			vulaBin = "vula"
+		}
+		c := exec.Command(vulaBin, "agents", "status")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
 
 	case "apps_store":
 		home := os.Getenv("HOME")

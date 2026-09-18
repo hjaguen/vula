@@ -28,6 +28,7 @@ var Catalog = []AppRecipe{
 	{ID: "neovim", Name: "Neovim", Category: "CLI", Description: "Vim-fork focused on extensibility and usability", InstallType: "apt", PackageName: "neovim"},
 	{ID: "fish", Name: "Fish Shell", Category: "CLI", Description: "Smart and user-friendly command-line shell", InstallType: "apt", PackageName: "fish"},
 	{ID: "tmux", Name: "Tmux", Category: "CLI", Description: "Terminal multiplexer with custom Vula theme", InstallType: "apt", PackageName: "tmux"},
+	{ID: "herdr", Name: "Herdr Multiplexer", Category: "CLI", Description: "Agent-native terminal multiplexer for AI agent fleets", InstallType: "curl-sh", PackageName: "https://herdr.dev/install.sh"},
 
 	// 3D & Design
 	{ID: "blender", Name: "Blender 3D", Category: "Design", Description: "3D creation suite for modeling, rendering, and animation", InstallType: "apt", PackageName: "blender"},
@@ -79,7 +80,18 @@ func (m *Manager) InstallCLIStack() error {
 		installLazygit()
 	}
 
+	// Install Herdr if missing
+	if _, err := exec.LookPath("herdr"); err != nil {
+		installHerdr()
+	}
+
 	return nil
+}
+
+func installHerdr() {
+	home := os.Getenv("HOME")
+	cmd := exec.Command("sh", "-c", "curl -fsSL https://herdr.dev/install.sh | sh -s -- -b "+home+"/.local/bin")
+	_ = cmd.Run()
 }
 
 func installEza() {

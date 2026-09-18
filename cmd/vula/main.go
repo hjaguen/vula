@@ -12,6 +12,7 @@ import (
 	"github.com/charmbracelet/log"
 	"github.com/spf13/cobra"
 	"github.com/vula-os/vula/internal/actions"
+	"github.com/vula-os/vula/internal/agents"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/apps"
 	"github.com/vula-os/vula/internal/config"
@@ -841,15 +842,30 @@ var aiConfigCmd = &cobra.Command{
 	},
 }
 
+var doAgentFlag bool
+
 var doCmd = &cobra.Command{
 	Use:   "do [instruction]",
 	Short: "Execute OS control actions using natural language AI intent parser",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg, _ := config.LoadConfig()
-		client := ai.NewClient(cfg)
 		userPrompt := strings.Join(args, " ")
 
+		if doAgentFlag {
+			mgr := agents.NewManager(cfg)
+			fmt.Printf("%s Offloading instruction to Herdr AI Agent Fleet...\n", ui.InfoStyle.Render("🤖"))
+			session, err := mgr.SpawnAgent("", userPrompt)
+			if err != nil {
+				log.Error("Failed to spawn Herdr agent pane", "error", err)
+				os.Exit(1)
+			}
+			fmt.Printf("%s Agent pane '%s' created in Herdr multiplexer.\n", ui.SuccessStyle.Render("✓"), session.Name)
+			fmt.Printf("Use 'vula agents attach %s' or open Vula HUD ('Super + Space') to view.\n", session.ID)
+			return
+		}
+
+		client := ai.NewClient(cfg)
 		fmt.Printf("\n%s Parsing OS action intent...\n\n", ui.InfoStyle.Render("⚡"))
 		plan, err := actions.ParseIntent(context.Background(), client, userPrompt)
 		if err != nil {
@@ -861,6 +877,108 @@ var doCmd = &cobra.Command{
 			log.Error("Failed executing OS action plan", "error", err)
 			os.Exit(1)
 		}
+	},
+}
+
+var agentsCmd = &cobra.Command{
+	Use:     "agents",
+	Aliases: []string{"agent", "herdr"},
+	Short:   "Manage Herdr AI Agent Fleet multiplexer sessions and autonomous workers",
+}
+
+var agentsStatusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check Herdr daemon status and active agent multiplexer panes",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := agents.NewManager(cfg)
+		st := mgr.GetFleetStatus()
+		if !st.Installed {
+			fmt.Println(ui.WarnStyle.Render("Herdr multiplexer is not installed."))
+			fmt.Println("Run 'vula apps install herdr' or 'vula profile apply full-stack-dev' to install it.")
+			return
+		}
+		fmt.Println(ui.RenderHeader("🤖 Herdr Agent Fleet Status", fmt.Sprintf("Binary: %s | Active Sessions: %d", st.BinaryPath, st.ActiveCount)))
+		if len(st.Sessions) == 0 {
+			fmt.Println(ui.InfoStyle.Render("No active Herdr agent sessions running."))
+			return
+		}
+		for _, s := range st.Sessions {
+			fmt.Printf(" • [%s] %s (Status: %s)\n", ui.AccentStyle.Render(s.ID), s.Name, s.Status)
+		}
+	},
+}
+
+var agentsListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all running agent sessions in Herdr multiplexer",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := agents.NewManager(cfg)
+		sessions, err := mgr.ListSessions()
+		if err != nil {
+			log.Error("Failed to list agent sessions", "error", err)
+			return
+		}
+		fmt.Println(ui.RenderHeader("Active Agent Fleet", fmt.Sprintf("%d active panes", len(sessions))))
+		if len(sessions) == 0 {
+			fmt.Println(ui.InfoStyle.Render("No active Herdr sessions found."))
+			return
+		}
+		for _, s := range sessions {
+			fmt.Printf(" • %s: %s (Status: %s)\n", ui.AccentStyle.Render(s.ID), s.Name, s.Status)
+		}
+	},
+}
+
+var agentsSpawnCmd = &cobra.Command{
+	Use:   "spawn [name] [prompt]",
+	Short: "Spawn a new autonomous AI agent pane in Herdr",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := agents.NewManager(cfg)
+		name := ""
+		prompt := ""
+		if len(args) > 0 {
+			name = args[0]
+		}
+		if len(args) > 1 {
+			prompt = strings.Join(args[1:], " ")
+		}
+		session, err := mgr.SpawnAgent(name, prompt)
+		if err != nil {
+			log.Error("Failed spawning agent", "error", err)
+			return
+		}
+		fmt.Printf("%s Agent '%s' spawned in Herdr multiplexer!\n", ui.SuccessStyle.Render("✓"), session.Name)
+	},
+}
+
+var agentsAttachCmd = &cobra.Command{
+	Use:   "attach [session-id]",
+	Short: "Attach interactive terminal to a Herdr agent pane",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := agents.NewManager(cfg)
+		if err := mgr.AttachSession(args[0]); err != nil {
+			log.Error("Failed attaching to session", "error", err)
+		}
+	},
+}
+
+var agentsKillCmd = &cobra.Command{
+	Use:   "kill [session-id]",
+	Short: "Terminate a Herdr agent multiplexer session",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg, _ := config.LoadConfig()
+		mgr := agents.NewManager(cfg)
+		if err := mgr.KillSession(args[0]); err != nil {
+			log.Error("Failed terminating session", "error", err)
+			return
+		}
+		fmt.Printf("%s Session '%s' terminated.\n", ui.SuccessStyle.Render("✓"), args[0])
 	},
 }
 
@@ -1141,11 +1259,20 @@ func init() {
 
 	mediaCmd.AddCommand(mediaWebm2Mp4Cmd)
 
+	doCmd.Flags().BoolVarP(&doAgentFlag, "agent", "a", false, "Offload task to Herdr AI Agent Fleet multiplexer")
+
+	agentsCmd.AddCommand(agentsStatusCmd)
+	agentsCmd.AddCommand(agentsListCmd)
+	agentsCmd.AddCommand(agentsSpawnCmd)
+	agentsCmd.AddCommand(agentsAttachCmd)
+	agentsCmd.AddCommand(agentsKillCmd)
+
 	profileCmd.AddCommand(profileListCmd)
 	profileCmd.AddCommand(profileApplyCmd)
 	profileCmd.AddCommand(profileUICmd)
 
 	rootCmd.AddCommand(doCmd)
+	rootCmd.AddCommand(agentsCmd)
 	rootCmd.AddCommand(actionsCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(fetchCmd)
