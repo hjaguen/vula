@@ -68,6 +68,40 @@ var DefaultKeybindings = []Keybinding{
 		Command:     "~/.local/bin/vula ai explain",
 	},
 
+	// AI Agent Fleet (Herdr)
+	{
+		ID:          "herdr_fleet",
+		Title:       "Herdr Agent Fleet Status",
+		Description: "Inspect active AI agent sessions and panes in Herdr",
+		Category:    "AI Agent Fleet (Herdr)",
+		Shortcut:    "<Super><Alt>h",
+		Command:     "vula agents status",
+	},
+	{
+		ID:          "herdr_new_agent",
+		Title:       "Spawn Agent Pane in Herdr",
+		Description: "Offload long-running task to background agent multiplexer pane",
+		Category:    "AI Agent Fleet (Herdr)",
+		Shortcut:    "Alt+n",
+		Command:     "vula do --agent '<instrucción>'",
+	},
+	{
+		ID:          "herdr_nav_agent",
+		Title:       "Navigate Agent Panes",
+		Description: "Switch focus between active Herdr agent panes",
+		Category:    "AI Agent Fleet (Herdr)",
+		Shortcut:    "Alt+j / Alt+k",
+		Command:     "Herdr internal navigation",
+	},
+	{
+		ID:          "herdr_zoom_agent",
+		Title:       "Maximize Agent Pane",
+		Description: "Toggle fullscreen zoom for focused agent terminal pane",
+		Category:    "AI Agent Fleet (Herdr)",
+		Shortcut:    "Alt+z",
+		Command:     "Herdr pane toggle-zoom",
+	},
+
 	// Window & Tiling Management
 	{
 		ID:          "tactile_grid",
