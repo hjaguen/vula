@@ -13,8 +13,21 @@ vula fetch                     # Tarjeta informativa de métricas y hardware
 vula install                   # Instalador interactivo TUI
 vula hud                       # Lanzar el HUD flotante Raycast TUI
 vula do "<instrucción>"        # Ejecutar acción de OS en lenguaje natural mediante IA
+vula do --agent "<tarea>"      # Offload tarea a panel multiplexor de Herdr AI Fleet
 vula listen [segundos]         # Iniciar escucha activa conversacional por voz
 vula version                   # Mostrar versión de Vula
+```
+
+---
+
+## 🤖 Flota de Agentes Herdr (`vula agents`)
+
+```bash
+vula agents status             # Estado del daemon Herdr y paneles de agentes activos
+vula agents list               # Listar todas las sesiones de agentes de IA en ejecución
+vula agents spawn [nom] [prompt]# Lanzar un nuevo panel de agente autónomo en Herdr
+vula agents attach <session-id># Conectar terminal interactiva a panel de agente
+vula agents kill <session-id>  # Detener sesión de agente Herdr
 ```
 
 ---

@@ -8,8 +8,8 @@ Vula integra herramientas dedicadas para optimizar el flujo de trabajo de desarr
 
 Configura con un solo comando un conjunto completo de herramientas, fuentes, apps y temas adaptados a tu rol:
 
-- 💻 **`full-stack-dev`**: Node.js, Go, Python, Docker, Postman, VS Code, Lazygit y JetBrains Mono.
-- ☁️ **`devops`**: Docker, `kubectl`, Helm, `k9s`, Terraform, Ansible, Tmux y Hack Nerd Font.
+- 💻 **`full-stack-dev`**: Node.js, Go, Python, Docker, Herdr AI Fleet, Postman, VS Code, Lazygit y JetBrains Mono.
+- ☁️ **`devops`**: Docker, `kubectl`, Herdr AI Fleet, Helm, `k9s`, Terraform, Tmux y Hack Nerd Font.
 - 🎨 **`designer-creator`**: GIMP, Inkscape, Blender, OBS Studio, Canva/Figma WebApps y Fira Code.
 - 🗄️ **`data-dba`**: Postgres Client, Redis Tools, DBeaver Community, Python (Pandas) y Cascadia Code.
 - ⚡ **`minimal`**: Entorno Tiling ultra-ligero de Vula con HUD flotante y Voz sin aplicaciones pesadas.
@@ -25,6 +25,25 @@ vula profile apply full-stack-dev
 
 # Abrir el selector interactivo TUI de perfiles
 vula profile ui
+```
+
+---
+
+## 🤖 Flota de Agentes de IA (`vula agents` / Herdr Multiplexer)
+
+Vula integra el multiplexor de agentes de IA [Herdr](https://herdr.dev) ("tmux para agentes de IA") para ejecutar tareas autónomas en segundo plano:
+
+```bash
+# Ver estado de la flota y sesiones activas
+vula agents status
+
+# Delegar tarea pesada a un nuevo panel de agente
+vula do --agent "analiza la arquitectura y compila los binarios"
+
+# Listar y conectar con paneles de agentes
+vula agents list
+vula agents attach <session-id>
+vula agents kill <session-id>
 ```
 
 ---

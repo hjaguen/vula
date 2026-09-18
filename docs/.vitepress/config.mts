@@ -35,7 +35,7 @@ export default defineConfig({
         items: [
           { text: '19 Temas & Fondos HD', link: '/guide/themes-and-wallpapers' },
           { text: 'Tiling Híbrido & Atajos', link: '/guide/tiling-and-shortcuts' },
-          { text: 'Herramientas Dev (Fuentes, WebApps & Medios)', link: '/guide/developer-tools' }
+          { text: 'Herramientas Dev & Flota de Agentes Herdr', link: '/guide/developer-tools' }
         ]
       },
       {

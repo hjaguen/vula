@@ -47,6 +47,7 @@ vula/
 ├── cmd/vula/              # Cobra CLI Entrypoint & Subcommands
 ├── internal/
 │   ├── actions/           # OS Actions Engine, Risk Guardrails & Audit Logger (vula do)
+│   ├── agents/            # Herdr AI Agent Fleet Multiplexer Integration Engine
 │   ├── ai/                # Context-Aware Hybrid AI Engine (Ollama, Gemini, Groq, OpenAI)
 │   ├── apps/              # Curated Developer CLI & GUI Apps Catalog
 │   ├── config/            # Declarative YAML Config (~/.config/vula/config.yaml)
@@ -205,6 +206,36 @@ Press **`Super + Alt + V`** or run:
 ```bash
 vula voice record
 ```
+
+---
+
+## 🤖 Herdr AI Agent Fleet Multiplexer (`vula agents`)
+
+Vula integrates [Herdr](https://herdr.dev) — an open-source, agent-native terminal multiplexer ("tmux for AI agents") — directly into the OS:
+
+### 1. Check Fleet Status & Sessions
+```bash
+vula agents status
+vula agents list
+```
+
+### 2. Offload Long-Running Tasks to Agent Panes (`vula do --agent`)
+```bash
+vula do --agent "analiza la estructura del proyecto y compila"
+```
+
+### 3. Attach or Terminate Agent Sessions
+```bash
+vula agents attach [session-id]
+vula agents kill [session-id]
+```
+
+### 4. Ergonomic Keyboard Shortcuts
+- **`Super + Alt + H`**: Check Herdr Fleet Status from anywhere
+- **`Alt + N`**: Spawn new agent pane inside Herdr
+- **`Alt + J` / `Alt + K`**: Switch focus between agent panes
+- **`Alt + Z`**: Maximize / Zoom active agent pane
+- **`Alt + W`**: Close active agent pane
 
 ---
 

@@ -32,6 +32,18 @@ vula do "convierte la última grabación de pantalla a mp4"
 
 ---
 
+## 🤖 Delegación en Flota de Agentes (`vula do --agent`)
+
+Para tareas complejas o de larga duración que requieren monitoreo en segundo plano (como refactorizaciones de código, compilaciones pesadas o auditorías), puedes delegar la instrucción a un panel del multiplexor de agentes **Herdr**:
+
+```bash
+vula do --agent "analiza la estructura del proyecto y compila los binarios"
+```
+
+Esto crea una sesión persistente en Herdr que puedes supervisar o adjuntar en cualquier momento con `vula agents attach` o desde el HUD (`Super + Space` -> **Herdr Agent Fleet**).
+
+---
+
 ## 🛡️ Clasificación de Riesgo & Confirmación
 
 Para garantizar la máxima seguridad en tu equipo, cada acción planificada por Vula es evaluada y clasificada en uno de 3 niveles de riesgo antes de su ejecución:

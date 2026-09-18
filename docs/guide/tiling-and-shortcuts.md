@@ -37,6 +37,18 @@ Puedes mantener presionada la tecla **`Super` y hacer clic izquierdo en cualquie
 
 ---
 
+## 🤖 Flota de Agentes IA (Herdr Multiplexer)
+
+Vula integra el multiplexor de agentes de IA **Herdr** con atajos limpios basados en `Alt` para no interferir con las ventanas del escritorio (`Super`) ni con la terminal (`Ctrl`):
+
+- **Estado de la Flota:** `Super + Alt + H` (ejecuta `vula agents status`)
+- **Crear Panel de Agente:** `Alt + N` (crea un nuevo agente)
+- **Navegar Paneles de Agente:** `Alt + J` / `Alt + K` (cambia el foco entre agentes)
+- **Maximizar / Zoom Panel:** `Alt + Z` (amplía el agente enfocado a pantalla completa)
+- **Cerrar Panel de Agente:** `Alt + W` (cierra el panel activo)
+
+---
+
 ## 🎹 Editor Interactivo de Atajos (`vula keys`)
 
 ```bash
