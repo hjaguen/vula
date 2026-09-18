@@ -181,6 +181,10 @@ func (m *Manager) ConfigureKeybindings() error {
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-input-source", "[]")
 	_ = SetDconfKey("org.gnome.desktop.wm.keybindings", "switch-input-source-backward", "[]")
 
+	// Free <Super>q from Dash to Dock overlay so <Super>q closes active windows
+	_ = SetDconfKey("org.gnome.shell.extensions.dash-to-dock", "shortcut", "[]")
+	_ = SetDconfKey("org.gnome.shell.extensions.dash-to-dock", "hot-keys", "false")
+
 	home := os.Getenv("HOME")
 	vulaBin := filepath.Join(home, ".local", "bin", "vula")
 	hudBin := filepath.Join(home, ".local", "bin", "vula-hud-launch")
