@@ -377,11 +377,22 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 
 	case "agents_fleet":
 		home := os.Getenv("HOME")
-		vulaBin := filepath.Join(home, ".local", "bin", "vula")
-		if _, err := os.Stat(vulaBin); err != nil {
-			vulaBin = "vula"
+		herdrBin := filepath.Join(home, ".local", "bin", "herdr")
+		if _, err := os.Stat(herdrBin); err != nil {
+			herdrBin = "herdr"
 		}
-		c := exec.Command(vulaBin, "agents", "status")
+
+		var c *exec.Cmd
+		if _, err := exec.LookPath(herdrBin); err == nil {
+			c = exec.Command(herdrBin)
+		} else {
+			vulaBin := filepath.Join(home, ".local", "bin", "vula")
+			if _, err := os.Stat(vulaBin); err != nil {
+				vulaBin = "vula"
+			}
+			c = exec.Command("sh", "-c", fmt.Sprintf("%s agents status; echo ''; read -p 'Presiona Enter para continuar...'", vulaBin))
+		}
+
 		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
 			return keysDoneMsg{err: err}
 		})
