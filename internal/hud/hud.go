@@ -376,26 +376,9 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		return *m, nil
 
 	case "agents_fleet":
-		home := os.Getenv("HOME")
-		herdrBin := filepath.Join(home, ".local", "bin", "herdr")
-		if _, err := os.Stat(herdrBin); err != nil {
-			herdrBin = "herdr"
-		}
-
-		var c *exec.Cmd
-		if _, err := exec.LookPath(herdrBin); err == nil {
-			c = exec.Command(herdrBin)
-		} else {
-			vulaBin := filepath.Join(home, ".local", "bin", "vula")
-			if _, err := os.Stat(vulaBin); err != nil {
-				vulaBin = "vula"
-			}
-			c = exec.Command("sh", "-c", fmt.Sprintf("%s agents status; echo ''; read -p 'Presiona Enter para continuar...'", vulaBin))
-		}
-
-		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
-			return keysDoneMsg{err: err}
-		})
+		go launchMaximizedHerdr()
+		m.quitting = true
+		return *m, tea.Quit
 
 	case "apps_store":
 		home := os.Getenv("HOME")
@@ -533,6 +516,36 @@ func launchTerminal() {
 	for _, term := range terminals {
 		if path, err := exec.LookPath(term); err == nil {
 			cmd := exec.Command(path)
+			cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+			_ = cmd.Start()
+			return
+		}
+	}
+}
+
+func launchMaximizedHerdr() {
+	home := os.Getenv("HOME")
+	herdrBin := filepath.Join(home, ".local", "bin", "herdr")
+	if _, err := os.Stat(herdrBin); err != nil {
+		herdrBin = "herdr"
+	}
+
+	type TermCandidate struct {
+		Name string
+		Args []string
+	}
+
+	candidates := []TermCandidate{
+		{Name: "ghostty", Args: []string{"--maximize", "-e", herdrBin}},
+		{Name: "kitty", Args: []string{"--start-as=maximized", herdrBin}},
+		{Name: "alacritty", Args: []string{"--option", "window.startup_mode=Maximized", "-e", herdrBin}},
+		{Name: "gnome-terminal", Args: []string{"--maximize", "--", herdrBin}},
+		{Name: "x-terminal-emulator", Args: []string{"--maximize", "--", herdrBin}},
+	}
+
+	for _, c := range candidates {
+		if path, err := exec.LookPath(c.Name); err == nil {
+			cmd := exec.Command(path, c.Args...)
 			cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
 			_ = cmd.Start()
 			return
