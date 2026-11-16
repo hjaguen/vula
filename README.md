@@ -11,17 +11,12 @@
 [![Charm](https://img.shields.io/badge/TUI-Charm_Ecosystem-FF5F87?style=flat)](https://charm.sh/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-```text
- ██▒   █▓ █▒   █▓ ██▓    ▄▄▄      
-▓██░   █▒▓██░   █▒▓██▒   ▒████▄    
- ▓██  █▒░ ▓██  █▒░▒██░   ▒██  ▀█▄  
-  ▒██ █░░  ▒██ █░░▒██░   ░██▄▄▄▄██ 
-   ▒▀█░     ▒▀█░  ░██████▒▓█   ▓██▒
-   ░ ▐░     ░ ▐░  ░ ▒░▓  ░▒▒   ▓▒█░
-   ░ ░░     ░ ░░  ░ ░ ▒  ░ ▒   ▒▒ ░
-     ░░       ░░    ░ ░    ░   ▒   
-      ░        ░      ░  ░     ░  ░
-```
+<p align="center">
+  <img src="docs/public/logo.svg" width="128" height="128" alt="Vula OS Logo" />
+</p>
+<p align="center">
+  <img src="docs/public/vula_brand_showcase.png" width="90%" alt="Vula OS Desktop Experience" />
+</p>
 
 ---
 

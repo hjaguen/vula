@@ -15,12 +15,16 @@ import (
 )
 
 const FetchLogoASCII = `
-  ⚡ V U L A
- ▄▄   ▄▄ ▄▄  ▄▄ ▄▄   ▄▄▄▄ 
- ██   ██ ██  ██ ██  ██  ██
- ▀█▄ ▄█▀ ██  ██ ██  ██████
-  ▀███▀  ▀████▀ ██▄▄██  ██
+   ██╗     ██╗
+   ██║     ██║
+   ██║     ██║
+   ╚██╗   ██╔╝
+    ╚██╗ ██╔╝ 
+     ╚████╔╝  
+      ╚██╔╝   
+       ╚═╝    
 `
+
 
 // RenderFetchCard generates a clean, Neofetch-style system summary with Vula metrics
 func RenderFetchCard(cfg *config.Config) string {
@@ -83,7 +87,7 @@ func RenderFetchCard(cfg *config.Config) string {
 
 	// 5. Render Logo on Left
 	logo := lipgloss.NewStyle().
-		Foreground(PrimaryColor).
+		Foreground(SecondaryColor).
 		Bold(true).
 		MarginRight(4).
 		Render(strings.TrimSpace(FetchLogoASCII))

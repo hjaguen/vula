@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <!-- Background subtle radial gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="50%" fx="30%" fy="30%">
+      <stop offset="0%" stop-color="#0F172A" />
+      <stop offset="100%" stop-color="#020617" />
+    </radialGradient>
+
+    <!-- Neon Cyan / Teal Primary Gradient -->
+    <linearGradient id="vulaCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="50%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#0D9488" />
+    </linearGradient>
+
+    <!-- Glowing Accent Gradient for the cut loop -->
+    <linearGradient id="vulaGlow" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#06B6D4" />
+      <stop offset="100%" stop-color="#22D3EE" />
+    </linearGradient>
+
+    <!-- Outer Glow Filter -->
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="8" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded canvas (optional/transparent safe) -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+
+  <g filter="url(#neonGlow)">
+    <!-- Left Stem: Long graceful arm angling down to vertex and turning up slightly -->
+    <path
+      d="M 120 110 
+         C 120 95, 140 85, 155 95 
+         L 248 375 
+         C 254 392, 276 395, 286 380 
+         L 326 320 
+         C 334 308, 350 308, 358 320 
+         C 366 332, 363 348, 352 358 
+         L 298 422 
+         C 268 456, 216 448, 198 408 
+         L 105 130 
+         C 100 115, 110 110, 120 110 Z"
+      fill="url(#vulaCyan)"
+    />
+
+    <!-- Right Stem: Elegant angled arm with overlapping loop gesture -->
+    <path
+      d="M 392 110 
+         C 402 110, 412 118, 407 132 
+         L 315 400 
+         C 305 430, 275 438, 255 422 
+         C 245 414, 245 398, 255 388 
+         C 265 378, 278 375, 285 360 
+         L 358 135 
+         C 364 118, 380 110, 392 110 Z"
+      fill="url(#vulaGlow)"
+    />
+  </g>
+</svg>
