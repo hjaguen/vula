@@ -1,4 +1,4 @@
-# ⚡ Vula (v0.6.0)
+# ⚡ Vula (v1.0.0)
 
 > **"Vula"** *(verb, Zulu & Xhosa)*: **To open, to start, to unlock.**
 
@@ -382,7 +382,8 @@ vula apps install-cli        # Install CLI stack (eza, bat, lazygit, starship, z
 - [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio, AI Palette Generator & HUD Theme Selector.
 - [x] **v0.5.0-alpha:** Vula OS Actions Engine (`vula do`), Multi-tier risk guardrails & audit logging, Hybrid AI Engine (Groq, Gemini, OpenAI) with Live Key Validation, PipeWire `@DEFAULT_SOURCE@` microphone diagnostics (`vula voice test`), and HUD Tab mode cycling.
 - [x] **v0.6.0:** Brand Identity & Agentic AI Evolution: New Neon Loop V brand design, Herdr AI multiplexer integration, lazy-loaded AI agent launchers (`claude`, `opencode`, `gemini`, `aider`), ergonomic short aliases (`c`, `cx`, `doa`, `fleet`), and automated stub provisioning.
-- [ ] **v1.0.0:** Production Release, `.deb` packaging, PPA & Sigstore release signing.
+- [x] **v1.0.0:** Official Production Release: Zero-friction Universal One-Liner Installer (`curl ... | bash`), System Snapshots & Instant Rollback Engine (`vula backup`), Hot Auto-Updater (`vula update`), Distraction-Free Zen Focus Mode (`vula desktop focus`), Official AI Agent Skill (`vula skill`), POSIX/Universal shell dotfiles injection, and multi-architecture automated GitHub Release pipeline.
+- [ ] **v1.1.0:** Debian packaging (.deb), PPA repository & Sigstore release signing.
 
 ---
 
