@@ -259,6 +259,18 @@ func (m *Manager) installApp(app AppRecipe) error {
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 		return cmd.Run()
+	case "npm":
+		cmd := exec.Command("sh", "-c", "npm install -g "+app.PackageName)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
+	case "pip":
+		cmd := exec.Command("sh", "-c", "pipx install "+app.PackageName+" || python3 -m pip install -U "+app.PackageName)
+		cmd.Stdin = os.Stdin
+		cmd.Stdout = os.Stdout
+		cmd.Stderr = os.Stderr
+		return cmd.Run()
 	}
 	return nil
 }

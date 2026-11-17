@@ -20,7 +20,7 @@ const LogoASCII = `
      ░        ░                    
 `
 
-const Version = "v0.1.0-alpha"
+const Version = "v0.6.0"
 
 func RenderBanner() string {
 	logo := lipgloss.NewStyle().

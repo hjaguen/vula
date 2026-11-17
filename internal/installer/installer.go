@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/charmbracelet/huh"
+	"github.com/vula-os/vula/internal/agents"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/packages"
@@ -109,6 +110,7 @@ func RunInteractiveInstaller(cfg *config.Config) error {
 
 		case "ai":
 			fmt.Printf("  %s AI Engine configured with model %s...\n", ui.SuccessStyle.Render("✓"), selectedModel)
+			_ = agents.InstallAllLazyStubs()
 
 		case "voice":
 			fmt.Printf("  %s Voice Engine configured (Hotkey: Super+Alt+V)...\n", ui.SuccessStyle.Render("✓"))

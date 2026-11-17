@@ -43,6 +43,11 @@ var Catalog = []AppRecipe{
 	{ID: "brave", Name: "Brave Browser", Category: "Browser", Description: "Privacy-focused web browser", InstallType: "snap", PackageName: "brave"},
 	{ID: "docker", Name: "Docker Engine", Category: "DevOps", Description: "Container runtime engine and developer platform", InstallType: "apt", PackageName: "docker-ce"},
 	{ID: "vlc", Name: "VLC Media Player", Category: "Media", Description: "Cross-platform multimedia player and framework", InstallType: "apt", PackageName: "vlc"},
+
+	// AI Coding Agents
+	{ID: "claude", Name: "Claude Code (cx)", Category: "AI Agents", Description: "Anthropic's agentic terminal coding assistant", InstallType: "npm", PackageName: "@anthropic-ai/claude-code"},
+	{ID: "opencode", Name: "OpenCode (c)", Category: "AI Agents", Description: "AI coding agent for Gemini, Claude, OpenAI and local LLMs", InstallType: "npm", PackageName: "opencode-ai"},
+	{ID: "aider", Name: "Aider Chat", Category: "AI Agents", Description: "Pair-programming AI agent in terminal with Git", InstallType: "pip", PackageName: "aider-chat"},
 }
 
 type Manager struct {

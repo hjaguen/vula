@@ -56,6 +56,12 @@ end
 # Vula AI Aliases
 alias ask='vula ai ask'
 alias vcmd='vula ai cmd'
+alias c='vula agent opencode'
+alias cx='vula agent claude'
+alias do='vula do'
+alias doa='vula do --agent'
+alias fleet='vula agents status'
+alias hud='vula hud'
 
 # Zoxide initialization
 if type -q zoxide

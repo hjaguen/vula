@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -967,6 +968,49 @@ var agentsAttachCmd = &cobra.Command{
 	},
 }
 
+var agentsRunCmd = &cobra.Command{
+	Use:   "run [agent-name] [flags/args]",
+	Short: "Launch a supported AI coding agent (claude, opencode, gemini, aider, codex)",
+	Args:  cobra.MinimumNArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		agentName := args[0]
+		launcher := agents.FindAgent(agentName)
+		if launcher == nil {
+			fmt.Printf("%s Unknown agent '%s'. Supported: claude (cx), opencode (c), gemini, aider, codex\n", ui.ErrorStyle.Render("Error:"), agentName)
+			return
+		}
+
+		if err := launcher.EnsureInstalled(); err != nil {
+			log.Error("Failed ensuring agent is installed", "error", err)
+			return
+		}
+
+		agentArgs := args[1:]
+		c := exec.Command(launcher.Command, agentArgs...)
+		c.Stdin = os.Stdin
+		c.Stdout = os.Stdout
+		c.Stderr = os.Stderr
+		if err := c.Run(); err != nil {
+			log.Error("Agent execution error", "error", err)
+		}
+	},
+}
+
+var agentsInitStubsCmd = &cobra.Command{
+	Use:   "init-stubs",
+	Short: "Install lazy-loaded launcher stubs in ~/.local/bin for all supported AI agents",
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := agents.InstallAllLazyStubs(); err != nil {
+			log.Error("Failed installing agent stubs", "error", err)
+			return
+		}
+		fmt.Println(ui.SuccessStyle.Render("✓ Lazy-loaded agent stubs installed in ~/.local/bin/"))
+		for _, a := range agents.BuiltinAgents {
+			fmt.Printf("  • %-12s -> %s (aliases: %s)\n", ui.InfoStyle.Render(a.Command), a.Name, strings.Join(a.Aliases, ", "))
+		}
+	},
+}
+
 var agentsKillCmd = &cobra.Command{
 	Use:   "kill [session-id]",
 	Short: "Terminate a Herdr agent multiplexer session",
@@ -1266,6 +1310,8 @@ func init() {
 	agentsCmd.AddCommand(agentsSpawnCmd)
 	agentsCmd.AddCommand(agentsAttachCmd)
 	agentsCmd.AddCommand(agentsKillCmd)
+	agentsCmd.AddCommand(agentsRunCmd)
+	agentsCmd.AddCommand(agentsInitStubsCmd)
 
 	profileCmd.AddCommand(profileListCmd)
 	profileCmd.AddCommand(profileApplyCmd)

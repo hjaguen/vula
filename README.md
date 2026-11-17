@@ -1,4 +1,4 @@
-# ⚡ Vula (v0.1.0-alpha)
+# ⚡ Vula (v0.6.0)
 
 > **"Vula"** *(verb, Zulu & Xhosa)*: **To open, to start, to unlock.**
 
@@ -225,7 +225,17 @@ vula agents attach [session-id]
 vula agents kill [session-id]
 ```
 
-### 4. Ergonomic Keyboard Shortcuts
+### 4. Lazy-Loaded Agent Launchers (Pre-wired Stubs)
+Vula includes pre-configured, lazy-loaded launchers with ergonomic short aliases for all leading coding agents:
+- **`c`** or **`opencode`**: Multi-provider open agent (Gemini, Claude, OpenAI, Local models)
+- **`cx`** or **`claude`**: Anthropic's Claude Code
+- **`gemini`**: Google Gemini CLI developer assistant
+- **`aider`**: Terminal pair-programming agent with Git integration
+- **`codex`**: OpenAI developer CLI agent
+
+Run `vula agents init-stubs` anytime to generate or refresh all launcher scripts in `~/.local/bin/`.
+
+### 5. Ergonomic Keyboard Shortcuts
 - **`Super + Alt + H`**: Check Herdr Fleet Status from anywhere
 - **`Alt + N`**: Spawn new agent pane inside Herdr
 - **`Alt + J` / `Alt + K`**: Switch focus between agent panes
@@ -349,6 +359,7 @@ vula apps install-cli        # Install CLI stack (eza, bat, lazygit, starship, z
 - [x] **v0.3.0-alpha:** Global Theme Engine (`tokyonight`, `catppuccin`, `nord`, `rose-pine`), Dotfiles manager (Fish, Starship, Neovim, Tmux), Developer CLI app catalog.
 - [x] **v0.4.0-alpha:** Tiling Assistant with custom gaps & active border highlight, Curated GNOME Extensions API installer (Blur my Shell, Just Perfection), Interactive Theme Studio, AI Palette Generator & HUD Theme Selector.
 - [x] **v0.5.0-alpha:** Vula OS Actions Engine (`vula do`), Multi-tier risk guardrails & audit logging, Hybrid AI Engine (Groq, Gemini, OpenAI) with Live Key Validation, PipeWire `@DEFAULT_SOURCE@` microphone diagnostics (`vula voice test`), and HUD Tab mode cycling.
+- [x] **v0.6.0:** Brand Identity & Agentic AI Evolution: New Neon Loop V brand design, Herdr AI multiplexer integration, lazy-loaded AI agent launchers (`claude`, `opencode`, `gemini`, `aider`), ergonomic short aliases (`c`, `cx`, `doa`, `fleet`), and automated stub provisioning.
 - [ ] **v1.0.0:** Production Release, `.deb` packaging, PPA & Sigstore release signing.
 
 ---

@@ -28,6 +28,8 @@ vula agents list               # Listar todas las sesiones de agentes de IA en e
 vula agents spawn [nom] [prompt]# Lanzar un nuevo panel de agente autónomo en Herdr
 vula agents attach <session-id># Conectar terminal interactiva a panel de agente
 vula agents kill <session-id>  # Detener sesión de agente Herdr
+vula agents run <claude|opencode|gemini|aider> # Ejecutar o instalar agente con verificación automática
+vula agents init-stubs         # Instalar/regenerar stubs de agentes (c, cx, opencode, claude) en ~/.local/bin
 ```
 
 ---
