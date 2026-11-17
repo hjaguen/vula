@@ -70,11 +70,19 @@ vula/
 ## 🚀 Quickstart
 
 ### 1. Requirements
-* **OS:** Ubuntu 24.04 LTS or newer (24.04+, 26.04 LTS compatible)
+* **OS:** Ubuntu 24.04+ LTS (Noble Numbat and forward-compatible with 26.04+ LTS)
 * **Desktop:** GNOME Shell 46+ (Wayland or X11)
-* **Toolchain:** Go 1.24+ (managed automatically)
 
-### 2. Installation
+### 2. Universal One-Liner Installation (Zero Friction)
+Run this single command in any clean terminal:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/hjaguen/vula/main/scripts/install.sh | bash
+```
+
+> **Safety Guaranteed:** The installer automatically creates a pre-installation snapshot with `vula backup create pre-vula-install`. You can rollback at any time with `vula backup restore pre-vula-install`.
+
+### 3. Build & Install from Source (Optional)
 ```bash
 git clone https://github.com/hjaguen/vula.git ~/repos/vula
 cd ~/repos/vula
@@ -82,7 +90,21 @@ make install
 vula desktop setup
 ```
 
-### 3. Verify System Diagnostics
+### 4. Essential Keybindings & Aliases Cheat Sheet
+
+| Action | Shortcut / Command | Description |
+| :--- | :--- | :--- |
+| **HUD Launcher** | `Super + Space` or `hud` | Spotlight/Raycast-style TUI orchestrator & AI chat |
+| **Tactile Grid** | `Super + T` | Interactive window tiling & grid matrix |
+| **Zen / Focus Mode** | `vula desktop focus` | Toggle distraction-free mode (hide panel + DND) |
+| **Natural Language OS** | `do "ajusta el brillo al 40%"` | Multi-tier guardrailed system commands |
+| **Herdr AI Agents** | `c` / `cx` / `fleet` | Run OpenCode (`c`), Claude Code (`cx`), or inspect fleet |
+| **AI Assistant** | `ask "cómo crear un pod en k8s?"` | Context-aware desktop AI consultation |
+| **Safety Snapshot** | `vula backup create [nombre]` | Save snapshot of GNOME dconf, keybindings & dotfiles |
+| **Rollback State** | `vula backup restore [nombre]` | Revert all system changes in 1 second |
+| **Auto-Update** | `vula update` | Check & update Vula to latest release |
+
+### 5. Verify System Diagnostics
 ```bash
 vula doctor
 ```

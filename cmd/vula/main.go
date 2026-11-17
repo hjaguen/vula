@@ -16,6 +16,7 @@ import (
 	"github.com/vula-os/vula/internal/agents"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/apps"
+	"github.com/vula-os/vula/internal/backup"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
 	"github.com/vula-os/vula/internal/dotfiles"
@@ -28,6 +29,7 @@ import (
 	"github.com/vula-os/vula/internal/profiles"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
+	"github.com/vula-os/vula/internal/update"
 	"github.com/vula-os/vula/internal/voice"
 )
 
@@ -510,6 +512,127 @@ var versionCmd = &cobra.Command{
 	Short: "Print Vula version and build info",
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("Vula %s (Ubuntu 24.04 LTS Noble | Go 1.24+ | Charm Engine)\n", ui.Version)
+	},
+}
+
+var updateCmd = &cobra.Command{
+	Use:     "update",
+	Aliases: []string{"upgrade"},
+	Short:   "Update Vula CLI to the latest version from GitHub Releases or source",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("%s Checking for Vula OS updates (current: %s)...\n", ui.InfoStyle.Render("⚡"), ui.Version)
+		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		defer cancel()
+
+		msg, err := update.SelfUpdate(ctx, ui.Version)
+		if err != nil {
+			log.Error("Update failed", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s %s\n", ui.SuccessStyle.Render("✓"), msg)
+	},
+}
+
+var backupDescFlag string
+
+var backupCmd = &cobra.Command{
+	Use:   "backup",
+	Short: "Create, list, and restore system snapshots (GNOME dconf, keybindings & dotfiles)",
+}
+
+var backupCreateCmd = &cobra.Command{
+	Use:   "create [name]",
+	Short: "Create a new safety snapshot of dotfiles, keybindings, and GNOME settings",
+	Run: func(cmd *cobra.Command, args []string) {
+		name := "manual-snapshot"
+		if len(args) > 0 {
+			name = args[0]
+		}
+		mgr := backup.NewManager()
+		fmt.Printf("%s Creating system snapshot '%s'...\n", ui.InfoStyle.Render("⚡"), name)
+		info, err := mgr.Create(name, backupDescFlag)
+		if err != nil {
+			log.Error("Failed creating backup", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Snapshot '%s' created successfully!\n", ui.SuccessStyle.Render("✓"), info.ID)
+		fmt.Printf("  • Ubicación: %s\n", info.Path)
+		fmt.Printf("  • Dotfiles guardados: %d\n", len(info.Dotfiles))
+		if info.HasDconf {
+			fmt.Printf("  • GNOME Dconf: Guardado\n")
+		}
+	},
+}
+
+var backupListCmd = &cobra.Command{
+	Use:   "list",
+	Short: "List all available system snapshots",
+	Run: func(cmd *cobra.Command, args []string) {
+		mgr := backup.NewManager()
+		list, err := mgr.List()
+		if err != nil {
+			log.Error("Failed listing backups", "error", err)
+			os.Exit(1)
+		}
+		if len(list) == 0 {
+			fmt.Println("No system snapshots found in ~/.config/vula/backups/")
+			return
+		}
+		fmt.Println(ui.RenderHeader("Vula System Snapshots", fmt.Sprintf("Found %d snapshots", len(list))))
+		for _, b := range list {
+			dconfStr := "No dconf"
+			if b.HasDconf {
+				dconfStr = "GNOME dconf"
+			}
+			fmt.Printf("  • %-26s %-16s (%s, %d dotfiles) - %s\n",
+				ui.InfoStyle.Render(b.ID),
+				ui.SuccessStyle.Render(b.Name),
+				dconfStr,
+				len(b.Dotfiles),
+				b.CreatedAt.Format("2006-01-02 15:04"),
+			)
+			if b.Description != "" {
+				fmt.Printf("    Nota: %s\n", b.Description)
+			}
+		}
+		fmt.Println()
+	},
+}
+
+var backupRestoreCmd = &cobra.Command{
+	Use:   "restore [name-or-id]",
+	Short: "Restore dotfiles, keybindings, and GNOME settings from a snapshot",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		query := args[0]
+		mgr := backup.NewManager()
+		fmt.Printf("%s Restoring system state from snapshot '%s'...\n", ui.InfoStyle.Render("⚡"), query)
+		restored, err := mgr.Restore(query)
+		if err != nil {
+			log.Error("Failed to restore backup", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Snapshot '%s' (%s) restored successfully!\n", ui.SuccessStyle.Render("✓"), restored.Name, restored.ID)
+		fmt.Println("  • Dotfiles restaurados a su ubicación original en $HOME")
+		if restored.HasDconf {
+			fmt.Println("  • Configuración de GNOME recargada vía dconf")
+		}
+	},
+}
+
+var backupDeleteCmd = &cobra.Command{
+	Use:   "delete [name-or-id]",
+	Short: "Delete a system snapshot",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		query := args[0]
+		mgr := backup.NewManager()
+		del, err := mgr.Delete(query)
+		if err != nil {
+			log.Error("Failed to delete backup", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Snapshot '%s' (%s) deleted.\n", ui.SuccessStyle.Render("✓"), del.Name, del.ID)
 	},
 }
 
@@ -1369,6 +1492,14 @@ func init() {
 	rootCmd.AddCommand(webappCmd)
 	rootCmd.AddCommand(fontCmd)
 	rootCmd.AddCommand(mediaCmd)
+	backupCreateCmd.Flags().StringVarP(&backupDescFlag, "description", "d", "", "Description for the snapshot")
+	backupCmd.AddCommand(backupCreateCmd)
+	backupCmd.AddCommand(backupListCmd)
+	backupCmd.AddCommand(backupRestoreCmd)
+	backupCmd.AddCommand(backupDeleteCmd)
+
+	rootCmd.AddCommand(backupCmd)
+	rootCmd.AddCommand(updateCmd)
 	rootCmd.AddCommand(keysCmd)
 	rootCmd.AddCommand(profileCmd)
 	rootCmd.AddCommand(versionCmd)

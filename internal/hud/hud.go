@@ -102,6 +102,8 @@ func InitialModel(cfg *config.Config) Model {
 		{Title: "Herdr Agent Fleet", Icon: "🤖", Category: "IA & Terminal", Description: "Multiplexor de agentes de IA autónomos (vula agents)", Command: "agents_fleet"},
 		{Title: "Vula Agent Skill", Icon: "🧠", Category: "IA", Description: "Manual e instrucciones del OS para agentes de IA (SKILL.md)", Command: "vula_skill"},
 		{Title: "Toggle Focus / Zen Mode", Icon: "🧘", Category: "Sistema", Description: "Modo libre de distracciones: oculta barra superior y silencia avisos", Command: "focus_mode"},
+		{Title: "Create System Snapshot", Icon: "💾", Category: "Sistema", Description: "Guardar snapshot de dotfiles y GNOME (vula backup create)", Command: "backup_create"},
+		{Title: "Update Vula OS", Icon: "🔄", Category: "Sistema", Description: "Comprobar y actualizar Vula a la última versión (vula update)", Command: "vula_update"},
 		{Title: "Workstation Profiles", Icon: "🚀", Category: "Sistema", Description: "Configurar perfil (Full-Stack, DevOps, Design, DBA, Minimal)", Command: "profile_selector"},
 		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "Configuración", Description: "Ver y editar atajos de teclado del escritorio", Command: "keys_map"},
 		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Description: "Malla interactiva de letras para mover y redimensionar", Command: "tactile_grid"},
@@ -400,6 +402,22 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 			m.statusMsg = "Zen Focus OFF"
 		}
 		return *m, nil
+
+	case "backup_create":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "backup", "create", "hud-snapshot")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
+
+	case "vula_update":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "update")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
 
 	case "apps_store":
 		home := os.Getenv("HOME")

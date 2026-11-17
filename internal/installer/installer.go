@@ -5,6 +5,7 @@ import (
 
 	"github.com/charmbracelet/huh"
 	"github.com/vula-os/vula/internal/agents"
+	"github.com/vula-os/vula/internal/backup"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/packages"
@@ -88,6 +89,12 @@ func RunInteractiveInstaller(cfg *config.Config) error {
 	}
 
 	fmt.Println(ui.HeaderStyle.Render(" APPLYING CONFIGURATIONS "))
+
+	// Create safety snapshot before applying system changes
+	backupMgr := backup.NewManager()
+	if snap, err := backupMgr.Create("pre-installer-setup", "Automatic snapshot prior to applying Vula installer setup"); err == nil {
+		fmt.Printf("  %s Safety snapshot saved: %s (restore with 'vula backup restore %s')\n", ui.InfoStyle.Render("🛡"), snap.ID, snap.ID)
+	}
 
 	// Apply Workstation Profile if selected
 	if selectedProfile != "" && selectedProfile != "none" {

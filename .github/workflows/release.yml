@@ -1,0 +1,60 @@
+name: Release Pipeline
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release Binaries
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: true
+
+      - name: Run Tests
+        run: go test -v ./...
+
+      - name: Build Multi-Arch Binaries & Package
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          mkdir -p dist
+
+          for ARCH in amd64 arm64; do
+            echo "Building for linux/${ARCH}..."
+            BIN_NAME="vula_${VERSION}_linux_${ARCH}"
+            BUILD_DIR="dist/${BIN_NAME}"
+            mkdir -p "${BUILD_DIR}"
+
+            GOOS=linux GOARCH=${ARCH} CGO_ENABLED=0 go build -ldflags="-s -w" -o "${BUILD_DIR}/vula" ./cmd/vula
+            cp LICENSE README.md "${BUILD_DIR}/"
+
+            tar -czf "dist/${BIN_NAME}.tar.gz" -C "${BUILD_DIR}" vula LICENSE README.md
+            rm -rf "${BUILD_DIR}"
+          done
+
+          cd dist
+          sha256sum *.tar.gz > checksums.txt
+          cd ..
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/checksums.txt
+          generate_release_notes: true
+          draft: false
+          prerelease: false
