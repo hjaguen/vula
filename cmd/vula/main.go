@@ -278,6 +278,38 @@ var desktopSetupCmd = &cobra.Command{
 	},
 }
 
+var desktopFocusCmd = &cobra.Command{
+	Use:     "focus",
+	Aliases: []string{"zen"},
+	Short:   "Toggle Zen/Focus distraction-free mode (hide panel, toggle DND)",
+	Run: func(cmd *cobra.Command, args []string) {
+		active, err := gnome.ToggleFocusMode()
+		if err != nil {
+			log.Error("Failed to toggle focus mode", "error", err)
+			os.Exit(1)
+		}
+		if active {
+			fmt.Println(ui.SuccessStyle.Render("⚡ Focus Mode ENABLED: Top bar hidden & Do Not Disturb activated."))
+		} else {
+			fmt.Println(ui.InfoStyle.Render("⚡ Focus Mode DISABLED: Top bar and notifications restored."))
+		}
+	},
+}
+
+var skillCmd = &cobra.Command{
+	Use:   "skill",
+	Short: "Display or generate the official Vula AI Agent Skill (~/.config/vula/SKILL.md)",
+	Run: func(cmd *cobra.Command, args []string) {
+		path, err := agents.WriteSkillFile()
+		if err != nil {
+			log.Error("Failed generating skill file", "error", err)
+			os.Exit(1)
+		}
+		fmt.Printf("%s Vula Agent Skill written to %s\n\n", ui.SuccessStyle.Render("✓"), path)
+		fmt.Println(agents.GenerateSkillMarkdown())
+	},
+}
+
 var desktopTilingCmd = &cobra.Command{
 	Use:   "tiling",
 	Short: "Configure GNOME 46 Tiling Assistant (gaps, quarter snaps, active border hint)",
@@ -1270,6 +1302,7 @@ func init() {
 	desktopCmd.AddCommand(desktopSetupCmd)
 	desktopCmd.AddCommand(desktopTilingCmd)
 	desktopCmd.AddCommand(desktopExtensionsCmd)
+	desktopCmd.AddCommand(desktopFocusCmd)
 	desktopExtensionsCmd.AddCommand(extensionsListCmd)
 	desktopExtensionsCmd.AddCommand(extensionsInstallCuratedCmd)
 
@@ -1319,6 +1352,7 @@ func init() {
 
 	rootCmd.AddCommand(doCmd)
 	rootCmd.AddCommand(agentsCmd)
+	rootCmd.AddCommand(skillCmd)
 	rootCmd.AddCommand(actionsCmd)
 	rootCmd.AddCommand(doctorCmd)
 	rootCmd.AddCommand(fetchCmd)

@@ -15,9 +15,11 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/vula-os/vula/internal/actions"
+	"github.com/vula-os/vula/internal/agents"
 	"github.com/vula-os/vula/internal/ai"
 	"github.com/vula-os/vula/internal/config"
 	"github.com/vula-os/vula/internal/doctor"
+	"github.com/vula-os/vula/internal/gnome"
 	"github.com/vula-os/vula/internal/theme"
 	"github.com/vula-os/vula/internal/ui"
 	"github.com/vula-os/vula/internal/voice"
@@ -98,6 +100,8 @@ func InitialModel(cfg *config.Config) Model {
 	allActions := []ActionItem{
 		{Title: "Execute OS Action", Icon: "⚡", Category: "Sistema", Description: "Ejecutar comando del terminal o script por voz/texto", Command: "os_action"},
 		{Title: "Herdr Agent Fleet", Icon: "🤖", Category: "IA & Terminal", Description: "Multiplexor de agentes de IA autónomos (vula agents)", Command: "agents_fleet"},
+		{Title: "Vula Agent Skill", Icon: "🧠", Category: "IA", Description: "Manual e instrucciones del OS para agentes de IA (SKILL.md)", Command: "vula_skill"},
+		{Title: "Toggle Focus / Zen Mode", Icon: "🧘", Category: "Sistema", Description: "Modo libre de distracciones: oculta barra superior y silencia avisos", Command: "focus_mode"},
 		{Title: "Workstation Profiles", Icon: "🚀", Category: "Sistema", Description: "Configurar perfil (Full-Stack, DevOps, Design, DBA, Minimal)", Command: "profile_selector"},
 		{Title: "Keybindings Map & Shortcuts", Icon: "⌨️", Category: "Configuración", Description: "Ver y editar atajos de teclado del escritorio", Command: "keys_map"},
 		{Title: "Tactile Grid Matrix (Super+T)", Icon: "🔲", Category: "Tiling", Description: "Malla interactiva de letras para mover y redimensionar", Command: "tactile_grid"},
@@ -379,6 +383,23 @@ func (m *Model) handleActionSelection(action ActionItem) (Model, tea.Cmd) {
 		go launchMaximizedHerdr()
 		m.quitting = true
 		return *m, tea.Quit
+
+	case "vula_skill":
+		home := os.Getenv("HOME")
+		vulaBin := filepath.Join(home, ".local", "bin", "vula")
+		c := exec.Command(vulaBin, "skill")
+		return *m, tea.ExecProcess(c, func(err error) tea.Msg {
+			return keysDoneMsg{err: err}
+		})
+
+	case "focus_mode":
+		active, _ := gnome.ToggleFocusMode()
+		if active {
+			m.statusMsg = "Zen Focus ON"
+		} else {
+			m.statusMsg = "Zen Focus OFF"
+		}
+		return *m, nil
 
 	case "apps_store":
 		home := os.Getenv("HOME")
@@ -690,7 +711,43 @@ func (m Model) View() string {
 			b.WriteString(rendered)
 			b.WriteString("\n")
 		} else if !m.loading {
-			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Escribe tu consulta y presiona Enter\n"))
+			b.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("  Escribe tu consulta y presiona Enter\n\n"))
+
+			// Herdr Fleet Status Mini-Card
+			agentMgr := agents.NewManager(m.cfg)
+			fleet := agentMgr.GetFleetStatus()
+
+			cardStyle := lipgloss.NewStyle().
+				Border(lipgloss.RoundedBorder()).
+				BorderForeground(ui.BorderColor).
+				Padding(0, 1).
+				Width(46)
+
+			var card strings.Builder
+			titleStyle := lipgloss.NewStyle().Foreground(ui.PrimaryColor).Bold(true)
+			card.WriteString(titleStyle.Render("🤖 Herdr Agent Fleet") + "\n")
+
+			if !fleet.Installed {
+				card.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Render("Herdr no instalado (vula apps install herdr)\n"))
+			} else if fleet.ActiveCount > 0 {
+				card.WriteString(fmt.Sprintf("%s %d agentes activos\n", ui.SuccessStyle.Render("●"), fleet.ActiveCount))
+				for i, s := range fleet.Sessions {
+					if i >= 2 {
+						break
+					}
+					name := s.Name
+					if len(name) > 36 {
+						name = name[:33] + "..."
+					}
+					card.WriteString(fmt.Sprintf("  • %s\n", lipgloss.NewStyle().Foreground(ui.SecondaryColor).Render(name)))
+				}
+			} else {
+				card.WriteString(fmt.Sprintf("%s Fleet en espera (0 agentes activos)\n", lipgloss.NewStyle().Foreground(ui.MutedColor).Render("○")))
+			}
+			card.WriteString(lipgloss.NewStyle().Foreground(ui.MutedColor).Italic(true).Render("Tips: 'c' (OpenCode), 'cx' (Claude), 'vula skill'"))
+
+			b.WriteString(cardStyle.Render(card.String()))
+			b.WriteString("\n")
 		}
 
 	case ModeVoice:

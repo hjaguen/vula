@@ -229,3 +229,32 @@ func EnableExtension(uuid string) error {
 	cmd := exec.Command("gnome-extensions", "enable", uuid)
 	return cmd.Run()
 }
+
+// ToggleFocusMode toggles Do Not Disturb and minimalist distraction-free state
+func ToggleFocusMode() (bool, error) {
+	// Check current Do Not Disturb state
+	out, err := exec.Command("gsettings", "get", "org.gnome.desktop.notifications", "show-banners").Output()
+	currentlyEnabled := true
+	if err == nil && strings.TrimSpace(string(out)) == "false" {
+		currentlyEnabled = false
+	}
+
+	newShowBanners := "false"
+	active := true
+	if !currentlyEnabled {
+		newShowBanners = "true"
+		active = false
+	}
+
+	// 1. Toggle notifications banner
+	_ = exec.Command("gsettings", "set", "org.gnome.desktop.notifications", "show-banners", newShowBanners).Run()
+
+	// 2. Hide or restore top panel via Just Perfection extension if available
+	if active {
+		_ = exec.Command("gsettings", "set", "org.gnome.shell.extensions.just-perfection", "panel", "false").Run()
+	} else {
+		_ = exec.Command("gsettings", "set", "org.gnome.shell.extensions.just-perfection", "panel", "true").Run()
+	}
+
+	return active, nil
+}

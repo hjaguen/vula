@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/vula-os/vula/internal/config"
@@ -15,6 +16,52 @@ type Manager struct {
 
 func NewManager(cfg *config.Config) *Manager {
 	return &Manager{cfg: cfg}
+}
+
+// UniversalShellConfig generates posix-compatible aliases and paths for Bash and Zsh
+func UniversalShellConfig() string {
+	return `# ==============================================================================
+# VULA OS UNIVERSAL SHELL CONFIGURATION (Bash & Zsh)
+# ==============================================================================
+
+# Ensure ~/.local/bin and standard Go/Cargo paths are in PATH
+export PATH="$HOME/.local/bin:$HOME/.local/go/bin:$HOME/.cargo/bin:$PATH"
+export LD_LIBRARY_PATH="$HOME/.local/lib:$LD_LIBRARY_PATH"
+[ -z "$EDITOR" ] && export EDITOR="nvim"
+
+# Modern CLI Aliases
+if command -v eza &>/dev/null; then
+    alias ls='eza --icons'
+    alias ll='eza -la --icons --git'
+    alias la='eza -a --icons'
+    alias lt='eza --tree --level=2 --icons'
+fi
+
+if command -v bat &>/dev/null; then
+    alias cat='bat --paging=never'
+elif command -v batcat &>/dev/null; then
+    alias cat='batcat --paging=never'
+fi
+
+if command -v lazygit &>/dev/null; then
+    alias lg='lazygit'
+fi
+
+if command -v lazydocker &>/dev/null; then
+    alias lzd='lazydocker'
+fi
+
+# Vula Core & AI Aliases
+alias vula="$HOME/.local/bin/vula"
+alias do='vula do'
+alias doa='vula do --agent'
+alias hud='vula hud'
+alias fleet='vula agents status'
+alias ask='vula ai ask'
+alias vcmd='vula ai cmd'
+alias c='vula agents run opencode'
+alias cx='vula agents run claude'
+`
 }
 
 // FishConfig generates an ergonomic, modern fish configuration
@@ -228,6 +275,24 @@ func (m *Manager) InstallAllDotfiles() error {
 
 		if err := os.WriteFile(targetPath, []byte(f.content), 0644); err != nil {
 			return fmt.Errorf("failed to write %s: %w", targetPath, err)
+		}
+	}
+
+	// Install Universal Shell script (~/.config/vula/shell.sh) for Bash & Zsh
+	vulaConfigDir := filepath.Join(home, ".config", "vula")
+	_ = os.MkdirAll(vulaConfigDir, 0755)
+	shellScriptPath := filepath.Join(vulaConfigDir, "shell.sh")
+	_ = os.WriteFile(shellScriptPath, []byte(UniversalShellConfig()), 0644)
+
+	// Inject into ~/.bashrc and ~/.zshrc cleanly
+	injectSnippet := "\n# <<< Vula OS Universal Environment >>>\n[ -f \"$HOME/.config/vula/shell.sh\" ] && source \"$HOME/.config/vula/shell.sh\"\n"
+	for _, rcFile := range []string{".bashrc", ".zshrc"} {
+		rcPath := filepath.Join(home, rcFile)
+		if data, err := os.ReadFile(rcPath); err == nil {
+			content := string(data)
+			if !strings.Contains(content, "vula/shell.sh") {
+				_ = os.WriteFile(rcPath, []byte(content+injectSnippet), 0644)
+			}
 		}
 	}
 
