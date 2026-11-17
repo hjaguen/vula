@@ -44,7 +44,36 @@ vula do --agent "analiza la arquitectura y compila los binarios"
 vula agents list
 vula agents attach <session-id>
 vula agents kill <session-id>
+
+# Lanzar agentes de codificación compatibles
+vula agents run opencode       # o alias directo: c
+vula agents run claude         # o alias directo: cx
 ```
+
+### Atajos Universales de Shell (Bash & Zsh)
+Al ejecutar `vula dotfiles install`, se genera `~/.config/vula/shell.sh`, agregando estos atajos instantáneos:
+- **`c`**: Lanza [OpenCode](https://opencode.ai) en la terminal.
+- **`cx`**: Lanza [Claude Code](https://claude.ai) en la terminal.
+- **`fleet`**: Comprueba el estado de los agentes en Herdr (`vula agents status`).
+- **`do`**: Acciones del sistema en lenguaje natural (`vula do`).
+- **`doa`**: Offload directo a agente en segundo plano (`vula do --agent`).
+- **`hud`**: Despliega el HUD (`vula hud`).
+
+---
+
+## 🧠 Manual de Habilidad para Agentes (`vula skill`)
+
+Para que agentes autónomos externos (Claude Code, OpenCode, Gemini CLI, Cursor, Windsurf) comprendan cómo interactuar con Vula de forma segura sin inventar comandos de shell riesgosos, Vula implementa la especificación estándar **Agent Skill**:
+
+```bash
+vula skill
+```
+
+Este comando genera `~/.config/vula/SKILL.md` documentando:
+1. El motor de acciones `vula do` y sus niveles de seguridad.
+2. Cómo despachar tareas a la flota Herdr (`vula do --agent`).
+3. El cambio armónico de temas (`vula theme set <nombre>`).
+4. La verificación diagnóstica con `vula doctor`.
 
 ---
 

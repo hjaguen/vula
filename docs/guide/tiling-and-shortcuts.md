@@ -49,6 +49,23 @@ Vula integra el multiplexor de agentes de IA **Herdr** con atajos limpios basado
 
 ---
 
+## 🧘 Modo Zen / Concentración (`vula desktop focus`)
+
+Para sesiones de programación profunda libre de distracciones (*Deep Work*), Vula incluye un modo de concentración que:
+- Oculta la barra superior del sistema (panel de GNOME).
+- Activa el modo **No Molestar** (*Do Not Disturb*), silenciando banners y notificaciones emergentes.
+
+```bash
+# Alternar modo Zen (activar / desactivar)
+vula desktop focus
+# o mediante el alias
+vula desktop zen
+```
+
+También puedes alternarlo instantáneamente desde el HUD (`Super + Space`) seleccionando **"Toggle Focus / Zen Mode"** (`🧘`).
+
+---
+
 ## 🎹 Editor Interactivo de Atajos (`vula keys`)
 
 ```bash

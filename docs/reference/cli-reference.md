@@ -14,6 +14,8 @@ vula install                   # Instalador interactivo TUI
 vula hud                       # Lanzar el HUD flotante Raycast TUI
 vula do "<instrucción>"        # Ejecutar acción de OS en lenguaje natural mediante IA
 vula do --agent "<tarea>"      # Offload tarea a panel multiplexor de Herdr AI Fleet
+vula skill                     # Escribir e inspeccionar Agent Skill (~/.config/vula/SKILL.md)
+vula update                    # Actualizar Vula a la última versión (alias: upgrade)
 vula listen [segundos]         # Iniciar escucha activa conversacional por voz
 vula version                   # Mostrar versión de Vula
 ```
@@ -120,6 +122,7 @@ vula media webm2mp4 [archivo]  # Convertir grabación .webm a .mp4 con ffmpeg
 ```bash
 vula desktop setup             # Aplicar optimizaciones y atajos de GNOME
 vula desktop tiling            # Configurar Tiling Assistant & Tactile
+vula desktop focus             # Alternar Modo Zen (oculta panel + Do Not Disturb, alias: zen)
 vula desktop extensions list   # Listar extensiones GNOME curadas
 vula desktop extensions install-curated # Instalar extensiones visuales
 
@@ -130,11 +133,23 @@ vula keys set <id> <shortcut>  # Cambiar atajo en dconf
 
 ---
 
+## 🛡️ Snapshots & Recuperación (`vula backup`)
+
+```bash
+vula backup create [nombre]    # Guardar snapshot de dotfiles, atajos y GNOME dconf
+vula backup create [nom] -d "nota" # Crear snapshot con descripción personalizada
+vula backup list               # Listar todos los snapshots disponibles
+vula backup restore <nombre|id># Restaurar dotfiles y GNOME en 1 segundo
+vula backup delete <nombre|id> # Eliminar un snapshot específico
+```
+
+---
+
 ## 🧰 Aplicaciones & Dotfiles (`vula apps` / `vula dotfiles`)
 
 ```bash
 vula apps list                 # Catálogo de aplicaciones dev
 vula apps install-cli          # Instalar stack CLI (fzf, zoxide, btop, lazygit)
 vula apps ui                   # App Store TUI interactivo
-vula dotfiles install          # Instalar dotfiles curados (Fish, Starship, Neovim, Tmux)
+vula dotfiles install          # Instalar dotfiles curados e inyectar ~/.config/vula/shell.sh
 ```

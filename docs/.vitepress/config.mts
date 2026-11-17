@@ -25,6 +25,7 @@ export default defineConfig({
         text: '📖 El Manual de Vula',
         items: [
           { text: 'Primeros Pasos e Instalación', link: '/guide/getting-started' },
+          { text: 'Snapshots & Recuperación Segura', link: '/guide/backups-and-recovery' },
           { text: 'HUD Overlay Interactivo (Super + Space)', link: '/guide/hud-overlay' },
           { text: 'Control de Sistema por IA (vula do)', link: '/guide/vula-do-ai' },
           { text: 'Asistente y Dictado por Voz', link: '/guide/voice-assistant' }

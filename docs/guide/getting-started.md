@@ -13,18 +13,36 @@ Bienvenido al manual oficial de **Vula**. Vula transforma Ubuntu 24.04 LTS en un
 
 ---
 
-## ⚡ Instalación Automática
+## ⚡ Instalación Universal One-Liner (Cero Fricción)
 
-Ejecuta el script de instalación en tu terminal:
+Ejecuta el script oficial en cualquier terminal de Ubuntu 24.04+ LTS:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/hjaguen/vula/main/scripts/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/hjaguen/vula/main/scripts/install.sh | bash
 ```
 
-El instalador automático se encargará de:
-1. Compilar el binario optimizado `vula` y colocarlo en `~/.local/bin/vula`.
-2. Configurar las fuentes Nerd Fonts y extensiones de GNOME Shell necesarias (`Tiling Assistant`, `Tactile`, `Blur my Shell`).
-3. Registrar los accesos directos globales en GNOME (`Super + Space` para el HUD).
+El instalador automático se encarga de:
+1. **Detección de Arquitectura:** Descarga el binario precompilado más reciente (`amd64` o `arm64`) desde GitHub Releases en solo 3 segundos (o compila automáticamente con Go si no hay binario de release).
+2. **Snapshot de Seguridad:** Ejecuta de forma preventiva `vula backup create pre-vula-install` para congelar tus dotfiles y preferencias de GNOME previas.
+3. **Entorno Universal de Shell:** Configura `~/.config/vula/shell.sh` e inyecta los atajos clave en `~/.bashrc`, `~/.zshrc` y `config.fish`:
+   - `do`: Acciones en lenguaje natural (`vula do`).
+   - `c` / `cx`: Lanzadores de agentes autónomos OpenCode y Claude Code.
+   - `hud`: Lanzador HUD flotante (`Super + Space`).
+   - `fleet`: Monitor de la flota de agentes Herdr (`vula agents status`).
+4. **Habilidad para Agentes:** Genera `~/.config/vula/SKILL.md` (`vula skill`).
+5. **Diagnóstico Automatizado:** Ejecuta `vula doctor` para certificar la salud del sistema.
+
+---
+
+## 🔄 Actualización en Caliente (`vula update`)
+
+Mantener tu entorno al día no requiere volver a clonar repositorios ni compilar a mano. Simplemente ejecuta:
+
+```bash
+vula update
+```
+
+Vula comprobará si existe una nueva versión oficial en GitHub Releases, descargará la actualización y reemplazará el binario de forma atómica y segura. También puedes usar el alias `vula upgrade`.
 
 ---
 
